@@ -10,13 +10,13 @@ export const PROTOCOL = `/libp2p/${pkg.name}/${pkg.version}`;
  * @param {Connection} params.connection The connection the stream belongs to
  * @param {Stream} params.stream stream to the peer
  */
-export async function handler ({ connection, stream }) {
+export async function handler({ connection, stream }) {
   try {
     await pipe(
       stream,
       async function (source) {
         for await (const message of source) {
-          console.info(`${connection.remotePeer.toB58String().slice(0, 8)}: ${message}`)
+          console.info(`Received: ${connection.remotePeer.toB58String().slice(0, 8)}: ${message}`)
         }
       }
     )
@@ -32,7 +32,7 @@ export async function handler ({ connection, stream }) {
  * @param {String} message The message to send over `stream`
  * @param {Stream} stream A stream over the muxed Connection to our peer
  */
-export async function send (message, stream) {
+export async function send(message, stream) {
   try {
     await pipe(
       [message],
