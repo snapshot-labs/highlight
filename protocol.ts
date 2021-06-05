@@ -23,7 +23,7 @@ export async function handler({ connection, stream }) {
     // Replies are done on new streams, so let's close this stream so we don't leak it
     await pipe([], stream)
   } catch (err) {
-    console.error(err)
+    console.error('handler failed', err);
   }
 }
 
@@ -44,6 +44,6 @@ export async function send(message, stream) {
       }
     )
   } catch (err) {
-    console.error(err)
+    console.error('send failed', err)
   }
 }

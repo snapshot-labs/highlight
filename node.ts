@@ -16,11 +16,15 @@ import { PROTOCOL, handler, send } from './protocol';
 })();
 
 async function sendMsg(node, peer, msg) {
-  console.log(`Send: ${msg}, to ${peer.id.toString().slice(0, 24)}`);
   const connection = node.connectionManager.get(peer.id);
   if (connection && peer.protocols.includes(PROTOCOL)) {
-    const { stream } = await connection.newStream([PROTOCOL]);
-    await send(msg, stream);
+    console.log(`Send: ${msg}, to ${peer.id.toString().slice(0, 24)}`);
+    try {
+      const { stream } = await connection.newStream([PROTOCOL]);
+      await send(msg, stream);
+    } catch (e) {
+      console.log('sendMsg failed', e);
+    }
   }
 }
 
