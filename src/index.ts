@@ -21,6 +21,11 @@ app.get('/send', async (req, res) => {
     ts: (Date.now() / 1e3).toFixed(),
     msg: req.query.msg || '👋'
   };
-  await sendToPeers(node, node.peerStore.peers, msg);
+
+  try {
+    await sendToPeers(node, node.peerStore.peers, msg);
+  } catch (e) {
+    console.error('send failed', e)
+  }
   res.json(msg);
 });
