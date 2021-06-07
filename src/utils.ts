@@ -7,7 +7,7 @@ export async function sendToPeer(node, peer: Peer, msg) {
   if (connection && peer.protocols.includes(PROTOCOL)) {
     try {
       const { stream } = await connection.newStream([PROTOCOL]);
-      await send(JSON.stringify(msg), stream, peer);
+      await send(msg, stream, peer);
     } catch (e) {
       console.error(e);
     }

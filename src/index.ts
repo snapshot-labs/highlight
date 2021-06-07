@@ -27,5 +27,5 @@ app.get('/send', async (req, res) => {
   } catch (e) {
     console.error('send failed', e)
   }
-  res.json(msg);
+  return res.json(msg);
 });

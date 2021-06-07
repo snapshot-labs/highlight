@@ -8,7 +8,8 @@ export async function handler({ stream, connection }) {
   try {
     await pipe(stream, async function(source) {
       for await (const msg of source) {
-        console.info(`Received: ${connection.remotePeer.toB58String().slice(0, 8)}: ${msg}`);
+        const str = Buffer.from(msg.toString(), 'base64').toString('utf8');
+        console.info(`Received: ${connection.remotePeer.toB58String().slice(0, 8)}: ${str}`);
       }
     });
     await pipe([], stream);
@@ -19,8 +20,9 @@ export async function handler({ stream, connection }) {
 
 export async function send(msg, stream, peer: Peer) {
   try {
-    await pipe([msg], stream);
-    console.log(`Sent: ${peer.id.toB58String().slice(0, 8)} ${msg}`);
+    const msgStr = JSON.stringify(msg);
+    await pipe([Buffer.from(msgStr).toString('base64')], stream);
+    console.log(`Sent: ${peer.id.toB58String().slice(0, 8)} ${msgStr}`);
   } catch (err) {
     console.error(err);
   }
