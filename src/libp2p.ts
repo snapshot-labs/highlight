@@ -5,7 +5,7 @@ import { NOISE } from 'libp2p-noise';
 import Mplex from 'libp2p-mplex';
 import wrtc from 'wrtc';
 
-export default () => {
+export default ({ peerId }) => {
   const transportKey = WebRtcStar.prototype[Symbol.toStringTag];
   return Libp2p.create({
     modules: {
@@ -14,9 +14,7 @@ export default () => {
       streamMuxer: [Mplex]
     },
     addresses: {
-      listen: [
-        '/dns4/p2p-webrtc-star.herokuapp.com/tcp/443/wss/p2p-webrtc-star/'
-      ]
+      listen: ['/dns4/p2p-webrtc-star.herokuapp.com/tcp/443/wss/p2p-webrtc-star/']
     },
     config: {
       transport: {
@@ -24,6 +22,7 @@ export default () => {
           wrtc
         }
       }
-    }
+    },
+    peerId
   });
-}
+};
