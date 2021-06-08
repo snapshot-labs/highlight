@@ -1,6 +1,7 @@
 import pipe from 'it-pipe';
 import { Peer } from 'libp2p/src/peer-store';
 import pkg from '../package.json';
+import { log } from './utils';
 
 export const PROTOCOL = `/${pkg.name}/${pkg.version}`;
 
@@ -22,7 +23,7 @@ export async function send(msg, stream, peer: Peer) {
   try {
     const msgStr = JSON.stringify(msg);
     await pipe([Buffer.from(msgStr).toString('base64')], stream);
-    console.log(`Sent: ${peer.id.toB58String().slice(0, 8)} ${msgStr}`);
+    log(`Sent: ${peer.id.toB58String().slice(0, 8)} ${msgStr}`);
   } catch (err) {
     console.error(err);
   }

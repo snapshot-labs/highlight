@@ -2,6 +2,8 @@ import Libp2p from 'libp2p';
 import { Peer } from 'libp2p/src/peer-store';
 import { PROTOCOL, send } from './highlight';
 
+export let logs: string[] = [];
+
 export async function sendToPeer(node, peer: Peer, msg) {
   const connection = node.connectionManager.get(peer.id);
   if (connection && peer.protocols.includes(PROTOCOL)) {
@@ -20,4 +22,10 @@ export async function sendToPeers(node: Libp2p, peers: Map<string, Peer>, msg) {
     peersArr.push(peer);
   }
   await Promise.all(peersArr.map(peer => sendToPeer(node, peer, msg)));
+}
+
+export function log(msg: string) {
+  logs.push(msg);
+  logs = logs.slice(-24);
+  console.log(msg);
 }

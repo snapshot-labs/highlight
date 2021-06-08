@@ -3,7 +3,7 @@ dotenv.config();
 
 import express from 'express';
 import bodyParser from 'body-parser';
-import { sendToPeers } from './utils';
+import { logs, sendToPeers } from './utils';
 import getInstance from './network';
 
 const app = express();
@@ -18,14 +18,18 @@ app.get('/send', async (req, res) => {
   if (!node) return res.json({ error: true });
 
   const msg = {
-    ts: (Date.now() / 1e3).toFixed(),
+    ts: parseInt((Date.now() / 1e3).toFixed()),
     msg: req.query.msg || '👋'
   };
 
   try {
     await sendToPeers(node, node.peerStore.peers, msg);
   } catch (e) {
-    console.error('send failed', e)
+    console.error('send failed', e);
   }
   return res.json(msg);
+});
+
+app.all('/*', (req, res) => {
+  res.json(logs);
 });
