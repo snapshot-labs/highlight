@@ -10,7 +10,7 @@ export async function handler({ stream, connection }) {
     await pipe(stream, async function(source) {
       for await (const msg of source) {
         const str = Buffer.from(msg.toString(), 'base64').toString('utf8');
-        console.info(`Received: ${connection.remotePeer.toB58String().slice(0, 8)}: ${str}`);
+        log(`Received: ${connection.remotePeer.toB58String().slice(0, 8)}: ${str}`);
       }
     });
     await pipe([], stream);
