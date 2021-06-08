@@ -1,3 +1,7 @@
 type Query {
-  hello: [String]
+  logs: [String]
+}
+
+type Mutation {
+  send(msg: String): String
 }
