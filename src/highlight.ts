@@ -1,4 +1,5 @@
 import pipe from 'it-pipe';
+// import lp from 'it-length-prefixed';
 import { Peer } from 'libp2p/src/peer-store';
 import pkg from '../package.json';
 import { log } from './utils';
