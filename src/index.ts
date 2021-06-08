@@ -2,16 +2,29 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
+import { ApolloServer } from 'apollo-server-express';
 import bodyParser from 'body-parser';
 import { logs, sendToPeers } from './utils';
 import getInstance from './network';
+import path from 'path';
+import fs from 'fs';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.json({ limit: '8mb' }));
 app.use(bodyParser.urlencoded({ limit: '8mb', extended: false }));
-app.listen(PORT, () => console.log(`Listening at http://localhost:${PORT}`));
+
+const resolvers = {
+  Query: {
+    hello: () => logs
+  }
+};
+const schemaFile = path.join(__dirname, './graphql/schema.gql');
+const typeDefs = fs.readFileSync(schemaFile, 'utf8');
+
+const server = new ApolloServer({ typeDefs, resolvers, tracing: true });
+server.applyMiddleware({ app });
 
 app.get('/send', async (req, res) => {
   const node = getInstance();
@@ -30,6 +43,4 @@ app.get('/send', async (req, res) => {
   return res.json(msg);
 });
 
-app.all('/*', (req, res) => {
-  res.json(logs);
-});
+app.listen(PORT, () => console.log(`Listening at http://localhost:${PORT}`));
