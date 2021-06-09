@@ -5,7 +5,7 @@ import { NOISE } from 'libp2p-noise';
 import Mplex from 'libp2p-mplex';
 import wrtc from 'wrtc';
 
-const WEBRTC_STAR = process.env.WEBRTC_STAR || '';
+const LIBP2P_WEBRTC_STAR = process.env.LIBP2P_WEBRTC_STAR || '';
 
 export default ({ peerId }) => {
   const transportKey = WebRtcStar.prototype[Symbol.toStringTag];
@@ -16,7 +16,7 @@ export default ({ peerId }) => {
       streamMuxer: [Mplex]
     },
     addresses: {
-      listen: [WEBRTC_STAR]
+      listen: [LIBP2P_WEBRTC_STAR]
     },
     config: {
       transport: {
