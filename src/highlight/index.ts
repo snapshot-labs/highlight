@@ -24,6 +24,18 @@ export default class Index {
     this.libp2p.connectionManager.on('peer:disconnect', this.onPeerDisconnect);
   }
 
+  async start() {
+    console.log('Start network');
+    await this.libp2p?.start();
+    this.running = true;
+  }
+
+  async stop() {
+    console.log('Stop network');
+    await this.libp2p?.stop();
+    this.running = false;
+  }
+
   async handler({ stream, connection }) {
     try {
       await pipe(stream, async function(source) {
@@ -38,53 +50,34 @@ export default class Index {
     }
   }
 
-  async send(msg, stream, peer: Peer) {
-    try {
-      const msgStr = JSON.stringify(msg);
-      await pipe([Buffer.from(msgStr).toString('base64')], stream);
-      log(`Sent: ${peer.id.toB58String().slice(0, 8)} ${msgStr}`);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  onPeerDiscovery(peerId) {
-    log(`Found peer ${peerId.toB58String()}`);
-  }
-
-  onPeerConnect(connection) {
-    log(`Connected to ${connection.remotePeer.toB58String()}`);
-  }
-
-  onPeerDisconnect(connection) {
-    log(`Disconnected from ${connection.remotePeer.toB58String()}`);
-  }
-
-  async start() {
-    console.log('Start network');
-    await this.libp2p?.start();
-    this.running = true;
-  }
-
-  async stop() {
-    console.log('Stop network');
-    await this.libp2p?.stop();
-    this.running = false;
-  }
-
-  async sendToPeer(peer: Peer, msg) {
+  async send(peer: Peer, msg) {
     const connection = this.libp2p?.connectionManager.get(peer.id);
     if (!connection || !peer.protocols.includes(this.procotol)) return;
     try {
       const { stream } = await connection.newStream([this.procotol]);
-      await this.send(msg, stream, peer);
+      const msgStr = JSON.stringify(msg);
+      await pipe([Buffer.from(msgStr).toString('base64')], stream);
+      log(`Sent: ${peer.id.toB58String().slice(0, 8)} ${msgStr}`);
     } catch (e) {
       console.error(e);
     }
   }
 
-  async sendToPeers(msg) {
+  async sendAll(msg) {
     const peers = [...(this.libp2p?.peerStore?.peers?.values() || [])];
-    await Promise.all(peers.map(peer => this.sendToPeer(peer, msg)));
+    await Promise.all(peers.map(peer => this.send(peer, msg)));
+    log(`Sent to ${peers.length} peers`);
+  }
+
+  onPeerDiscovery(peerId) {
+    log(`Found peer ${peerId.toB58String().slice(0, 8)}`);
+  }
+
+  onPeerConnect(connection) {
+    log(`Connected to ${connection.remotePeer.toB58String().slice(0, 8)}`);
+  }
+
+  onPeerDisconnect(connection) {
+    log(`Disconnected from ${connection.remotePeer.toB58String().slice(0, 8)}`);
   }
 }

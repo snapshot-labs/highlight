@@ -16,7 +16,7 @@ export const resolvers = {
   Mutation: {
     send: async (parent, { msg }) => {
       if (highlight.libp2p) {
-        await highlight.sendToPeers({
+        await highlight.sendAll({
           ts: parseInt((Date.now() / 1e3).toFixed()),
           msg: msg || '👋'
         });
