@@ -57,7 +57,7 @@ export default class Index {
       const { stream } = await connection.newStream([this.procotol]);
       const msgStr = JSON.stringify(msg);
       await pipe([Buffer.from(msgStr).toString('base64')], stream);
-      log(`Sent: ${peer.id.toB58String().slice(0, 8)} ${msgStr}`);
+      log(`Sent: ${peer.id.toB58String().slice(0, 8)} ${msgStr.slice(0, 64)}`);
     } catch (e) {
       console.error(e);
     }
