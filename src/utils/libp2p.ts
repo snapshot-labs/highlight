@@ -16,7 +16,7 @@ export default ({ peerId }) => {
       streamMuxer: [Mplex]
     },
     addresses: {
-      listen: [LIBP2P_WEBRTC_STAR]
+      listen: [LIBP2P_WEBRTC_STAR, '/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star']
     },
     config: {
       transport: {

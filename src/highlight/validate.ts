@@ -1,5 +1,5 @@
-import { _TypedDataEncoder } from '@ethersproject/hash';
 import { verifyTypedData } from '@ethersproject/wallet';
+import { _TypedDataEncoder } from '@ethersproject/hash';
 
 export function getHash(data) {
   const { domain, types, message } = data;
@@ -8,11 +8,10 @@ export function getHash(data) {
   return hash;
 }
 
-export async function isValid(address, sig, data) {
+export function verify(address, sig, data) {
   const { domain, types, message } = data;
   const recoverAddress = verifyTypedData(domain, types, message, sig);
   console.log('Address', address);
   console.log('Recover address', recoverAddress);
-
   return address === recoverAddress;
 }

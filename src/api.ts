@@ -1,28 +1,45 @@
 import express from 'express';
 import highlight from './instance';
-import { isValid } from './highlight/validate';
+import { getHash, verify } from './highlight/validate';
+import db from './utils/mysql';
+import { set } from './storage/aws-s3';
 
 const router = express.Router();
 
 router.post('/message', async (req, res) => {
-  const body = req.body;
-  console.log('Message', body);
+  if (!highlight.running) return res.status(500);
 
-  if (!highlight.running) {
-    console.log('not running');
-    return res.status(500).json({
-      error: 'unauthorized',
-      error_description: 'ops!'
-    });
-  }
+  const body = req.body;
+  console.log('Set', body);
 
   // @TODO check format
 
-  if (!(await isValid(body.address, body.sig, body.data))) {
-    console.log('wrong signature');
-    return Promise.reject();
+  // Verify signature
+  const isValid = verify(body.address, body.sig, body.data);
+  if (!isValid) return res.status(500);
+
+  // Store on AWS S3
+  try {
+    await set(body.sig, body);
+  } catch (e) {
+    console.log(e);
+    return res.status(500);
   }
 
+  // Index receipt
+  try {
+    const receipt = {
+      sig: body.sig,
+      address: body.address,
+      hash: getHash(body.data)
+    };
+    await db.queryAsync('INSERT IGNORE INTO receipts SET ?', [receipt]);
+  } catch (e) {
+    console.log(e);
+    return res.status(500);
+  }
+
+  // Gossip to peers
   await highlight.sendAll(body);
 
   return res.json({ success: true });
