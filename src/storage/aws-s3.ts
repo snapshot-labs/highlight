@@ -17,7 +17,7 @@ const client = new AWS.S3({
 export async function set(key, value) {
   try {
     return await client.putObject({
-      Bucket: process.env.AWS_BUCKET,
+      Bucket: process.env.AWS_BUCKET_NAME,
       Key: `public/${key}.json`,
       Body: JSON.stringify(value),
       ContentType: 'application/json; charset=utf-8'
@@ -30,7 +30,7 @@ export async function set(key, value) {
 export async function get(key) {
   try {
     const { Body } = await client.getObject({
-      Bucket: process.env.AWS_BUCKET,
+      Bucket: process.env.AWS_BUCKET_NAME,
       Key: `public/${key}.json`
     });
     // @ts-ignore

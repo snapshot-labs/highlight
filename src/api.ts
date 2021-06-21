@@ -15,8 +15,9 @@ router.post('/message', async (req, res) => {
   // @TODO check format
 
   // Verify signature
-  const isValid = verify(body.address, body.sig, body.data);
+  const isValid = await verify(body.address, body.sig, body.data);
   if (!isValid) return res.status(500);
+  console.log('Signature is valid');
 
   // Store on AWS S3
   try {
@@ -28,10 +29,13 @@ router.post('/message', async (req, res) => {
 
   // Index receipt
   try {
+    const domain = body.data.domain;
     const receipt = {
       sig: body.sig,
       address: body.address,
-      hash: getHash(body.data)
+      hash: getHash(body.data),
+      domain: `${domain.name}/${domain.version}`,
+      ts: body.data.message.timestamp
     };
     await db.queryAsync('INSERT IGNORE INTO receipts SET ?', [receipt]);
   } catch (e) {
