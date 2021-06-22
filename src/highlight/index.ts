@@ -39,22 +39,18 @@ export default class Index {
 
   async handler({ stream, connection }) {
     try {
-      await pipe(stream, async source => {
+      await pipe(stream, async function(source) {
         for await (const msg of source) {
           const str = Buffer.from(msg.toString(), 'base64').toString('utf8');
           const from = connection.remotePeer.toB58String().slice(0, 8);
           log(`Received: ${from}: ${str}`);
-          await this.handle(JSON.parse(str));
+          await ingestor(JSON.parse(str));
         }
       });
       await pipe([], stream);
     } catch (err) {
       console.error(err);
     }
-  }
-
-  async handle(body) {
-    await ingestor(body);
   }
 
   async send(peer: Peer, msg) {

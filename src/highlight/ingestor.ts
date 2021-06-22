@@ -33,4 +33,6 @@ export default async function(body) {
     console.log(e);
     return Promise.reject();
   }
+
+  console.log('Ingestor approved', body.sig);
 }
