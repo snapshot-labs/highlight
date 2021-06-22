@@ -5,6 +5,7 @@ import { Peer } from 'libp2p/src/peer-store';
 import createLibP2P from '../utils/libp2p';
 import { log } from '../utils';
 import pkg from '../../package.json';
+import ingestor from './ingestor';
 
 export default class Index {
   public procotol = `/${pkg.name}/${pkg.version}`;
@@ -38,16 +39,22 @@ export default class Index {
 
   async handler({ stream, connection }) {
     try {
-      await pipe(stream, async function(source) {
+      await pipe(stream, async source => {
         for await (const msg of source) {
           const str = Buffer.from(msg.toString(), 'base64').toString('utf8');
-          log(`Received: ${connection.remotePeer.toB58String().slice(0, 8)}: ${str}`);
+          const from = connection.remotePeer.toB58String().slice(0, 8);
+          log(`Received: ${from}: ${str}`);
+          await this.handle(JSON.parse(str));
         }
       });
       await pipe([], stream);
     } catch (err) {
       console.error(err);
     }
+  }
+
+  async handle(body) {
+    await ingestor(body);
   }
 
   async send(peer: Peer, msg) {
