@@ -8,8 +8,6 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.18.0",
-    "@ethersproject/hash": "^5.3.0",
-    "@ethersproject/wallet": "^5.3.0",
     "@snapshot-labs/snapshot.js": "github:snapshot-labs/snapshot.js#master",
     "bluebird": "^3.7.2",
     "body-parser": "^1.19.0",
@@ -17,7 +15,6 @@
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "eslint": "^6.7.2",
-    "ethers": "^5.3.1",
     "express": "^4.17.1",
     "it-length-prefixed": "^5.0.2",
     "it-pipe": "^1.1.0",

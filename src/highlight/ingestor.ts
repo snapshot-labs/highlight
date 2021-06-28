@@ -1,5 +1,5 @@
-import { getHash, verify } from './validate';
-import { set } from '../storage/aws-s3';
+import { getHash, verify } from '@snapshot-labs/snapshot.js/src/sign/utils';
+import { set } from '../addons/aws';
 import db from '../utils/mysql';
 
 export default async function(body) {
