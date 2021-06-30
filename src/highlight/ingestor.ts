@@ -1,12 +1,12 @@
-import { getHash, verify } from '@snapshot-labs/snapshot.js/src/sign/utils';
+import snapshot from '@snapshot-labs/snapshot.js';
 import { set } from '../addons/aws';
 import db from '../utils/mysql';
 
 export default async function(body) {
-  // @TODO check format
+  // @TODO check envelop format
 
   // Verify signature
-  const isValid = await verify(body.address, body.sig, body.data);
+  const isValid = await snapshot.utils.verify(body.address, body.sig, body.data);
   if (!isValid) return Promise.reject();
   console.log('Signature is valid');
 
@@ -24,7 +24,7 @@ export default async function(body) {
     const receipt = {
       sig: body.sig,
       address: body.address,
-      hash: getHash(body.data),
+      hash: snapshot.utils.getHash(body.data),
       domain: `${domain.name}/${domain.version}`,
       ts: body.data.message.timestamp
     };
