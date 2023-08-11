@@ -1,41 +1,38 @@
 {
   "name": "highlight",
   "version": "0.1.0",
+  "license": "MIT",
   "scripts": {
-    "lint": "eslint . --ext .ts --fix",
-    "build": "tsc",
-    "start": "nodemon src/index.ts"
+    "lint": "eslint src/ --ext .ts --fix",
+    "build": "tsc -p tsconfig.json",
+    "dev": "nodemon src/index.ts",
+    "start": "node dist/src/index.js"
   },
+  "eslintConfig": {
+    "extends": "@snapshot-labs"
+  },
+  "prettier": "@snapshot-labs/prettier-config",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.18.0",
-    "@snapshot-labs/snapshot.js": "github:snapshot-labs/snapshot.js#922357dc6e05a9b17e2c580df114083b03b3618c",
+    "@types/express": "^4.17.11",
+    "@types/mysql": "^2.15.21",
+    "@types/node": "^18.11.6",
     "bluebird": "^3.7.2",
-    "body-parser": "^1.19.0",
+    "cassandra-driver": "^4.6.4",
     "connection-string": "^1.0.1",
     "cors": "^2.8.5",
-    "dotenv": "^10.0.0",
-    "eslint": "^6.7.2",
-    "express": "^4.17.1",
-    "it-length-prefixed": "^5.0.2",
-    "it-pipe": "^1.1.0",
-    "libp2p": "^0.31.6",
-    "libp2p-gossipsub": "^0.10.0",
-    "libp2p-mplex": "^0.10.3",
-    "libp2p-noise": "^3.0.0",
-    "libp2p-webrtc-star": "^0.22.3",
-    "libp2p-websockets": "^0.15.7",
+    "cross-fetch": "^3.1.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
     "mysql": "^2.18.1",
-    "nodemon": "^2.0.7",
-    "ts-node": "^9.1.1",
-    "typescript": "^4.1.3",
-    "wrtc": "^0.4.7"
+    "nodemon": "^2.0.19",
+    "starknet": "^4.22.0",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.9.3"
   },
   "devDependencies": {
-    "@types/express": "^4.17.11",
-    "@types/node": "^14.14.21",
-    "@typescript-eslint/eslint-plugin": "^2.33.0",
-    "@typescript-eslint/parser": "^2.33.0",
-    "eslint-plugin-prettier": "^3.1.3",
-    "prettier": "^1.19.1"
+    "@snapshot-labs/eslint-config": "^0.1.0-beta.7",
+    "@snapshot-labs/prettier-config": "^0.1.0-beta.7",
+    "eslint": "^8.28.0",
+    "prettier": "^2.8.0"
   }
 }
