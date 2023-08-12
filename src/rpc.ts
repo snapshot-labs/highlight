@@ -3,7 +3,7 @@ import Highlight from './highlight/highlight';
 import agents from './agents';
 import { rpcSuccess, rpcError } from './utils';
 
-const highlight = new Highlight({ agents });
+export const highlight = new Highlight({ agents });
 // highlight.reset();
 
 const router = express.Router();

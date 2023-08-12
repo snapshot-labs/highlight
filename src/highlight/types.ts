@@ -6,7 +6,6 @@ export interface Unit {
   version: string;
   messages: Message[];
   timestamp: number;
-  parent_units: string[];
   signature: string;
 }
 
@@ -26,9 +25,15 @@ export interface GetEventsRequest {
   end: number;
 }
 
-export interface EventRow {
-  id: number;
+export interface Storage {
   agent: string;
   key: string;
-  events: string;
+  value: any;
+}
+
+export interface Event {
+  id?: number;
+  agent: string;
+  key: string;
+  data: any[];
 }

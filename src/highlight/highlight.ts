@@ -1,7 +1,6 @@
-import fs from 'fs';
 import Agent from './agent';
-import db from './helpers/mysql';
 import Process from './process';
+import redis from './redis';
 import type { InvokeRequest, GetEventsRequest, PostJointRequest } from './types';
 
 export default class Highlight {
@@ -22,10 +21,9 @@ export default class Highlight {
           }
         }
 
-        await process.execute();
-
-        return 'OK';
+        return await process.execute();
       } catch (e) {
+        console.log(e);
         return Promise.reject(e);
       }
     }
@@ -39,20 +37,15 @@ export default class Highlight {
   }
 
   async getEvents(params: GetEventsRequest) {
-    const query = 'SELECT * FROM events WHERE `id` >= ? AND `id` <= ?';
+    const keys = [...Array(params.end - params.start).keys()].map(
+      (key, i) => `event:${i + params.start}`
+    );
+    const result = await redis.mGet(keys);
 
-    const result = await db.queryAsync(query, [params.start, params.end]);
-
-    return result.map(event => ({
-      ...event,
-      events: JSON.parse(event.events)
-    }));
+    return result.filter(event => event !== null).map(event => JSON.parse(event as string));
   }
 
   async reset() {
-    let query = 'DROP TABLE IF EXISTS agents, units, storages, events;';
-    query += fs.readFileSync('./src/highlight/helpers/schema.sql').toString();
-
-    return await db.queryAsync(query);
+    return await redis.flushAll();
   }
 }

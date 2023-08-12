@@ -1,70 +1,56 @@
-import db from './helpers/mysql';
+import redis from './redis';
+import { Storage, Event } from './types';
 
 export default class Process {
-  public events: Record<string, string>[] = [];
-  public storageWrites: Record<string, string>[] = [];
-  public storageState: Record<string, Record<string, string>> = {};
+  public events: Event[] = [];
+  public writes: Storage[] = [];
+  public state: Record<string, Record<string, string>> = {};
 
-  emitEvent(event: Record<string, string>) {
+  emit(event: Event) {
     this.events.push(event);
   }
 
-  async getStorage(agent: string, key: string) {
-    let storage = this.storageState[`${agent}/${key}`];
+  async get(agent: string, key: string) {
+    const storage = this.state[`${agent}:${key}`];
+    if (storage) return storage;
 
-    if (!storage) {
-      const query = 'SELECT `value`, `type` FROM storages WHERE agent = ? AND `key` = ?';
+    const value = await redis.get(`storage:${agent}:${key}`);
 
-      [storage] = await db.queryAsync(query, [agent, key]);
-    }
-
-    return storage;
+    return JSON.parse(value as string);
   }
 
-  async hasStorage(agent: string, key: string) {
-    return !!(await this.getStorage(agent, key));
+  async has(agent: string, key: string) {
+    return !!(await this.get(agent, key));
   }
 
-  async readStorage(agent: string, key: string) {
-    const storage = await this.getStorage(agent, key);
-
-    if (storage.type === 'number') return parseInt(storage.value);
-    if (storage.type === 'bool') return !!parseInt(storage.value);
-
-    return storage.value;
-  }
-
-  writeStorage(storage: Record<string, string>) {
-    this.storageWrites.push(storage);
-    this.storageState[`${storage.agent}/${storage.key}`] = {
-      type: storage.type,
-      value: storage.value
-    };
+  write(storage: Storage) {
+    this.writes.push(storage);
+    this.state[`${storage.agent}:${storage.key}`] = storage.value;
   }
 
   async execute() {
-    // @TODO change to single MySQL transaction
+    const multi = redis.multi();
 
-    let query = '';
-    const params: any[] = [];
-
-    const connection = await db.getConnectionAsync();
-    await connection.beginTransactionAsync();
-
-    if (this.storageWrites.length > 0) {
-      for (const write of this.storageWrites) {
-        query += 'INSERT INTO storages SET ? ON DUPLICATE KEY UPDATE value = ?;';
-        params.push(write, write.value);
+    if (this.writes.length > 0) {
+      for (const write of this.writes) {
+        multi.set(`storage:${write.agent}:${write.key}`, JSON.stringify(write.value));
       }
     }
 
+    let id = 0;
     if (this.events.length > 0) {
+      id = parseInt((await redis.get('events:id')) || '0');
+
       for (const event of this.events) {
-        query += 'INSERT INTO events SET ?;';
-        params.push(event);
+        id++;
+        event.id = id;
+        multi.set(`event:${id}`, JSON.stringify(event));
       }
+      multi.set('events:id', id);
     }
 
-    await db.queryAsync(query, params);
+    await multi.exec();
+
+    return id;
   }
 }

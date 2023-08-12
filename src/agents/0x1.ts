@@ -2,13 +2,13 @@ import Agent from '../highlight/agent';
 
 export default class Discussions extends Agent {
   async add_category(parent: number, metadataURI: string) {
-    const id = (await this.storage.read('next_category_id')) as number;
+    console.log('Parent', parent, 'Metadata URI', metadataURI);
+    const id = (await this.storage.get('next_category_id')) || 1;
+
+    this.storage.write(`category.${id}`, 1);
+    this.storage.write('next_category_id', id + 1);
 
     const event = [id, parent, metadataURI];
-
-    this.storage.write(`category.${id}`, 'bool', '1');
-    this.storage.write('next_category_id', 'number', (id + 1).toString());
-
     this.event.emit('new_category', event);
 
     return event;
@@ -20,27 +20,15 @@ export default class Discussions extends Agent {
     if (!(await this.storage.has(`category.${category}`)))
       return Promise.reject('invalid category');
 
-    const id = (await this.storage.read('next_discussion_id')) as number;
+    const id = (await this.storage.get('next_discussion_id')) || 1;
+
+    this.storage.write(`discussion.${id}`, true);
+    this.storage.write('next_discussion_id', id + 1);
 
     const event = [id, author, category, parent, metadataURI];
-
-    this.storage.write(`discussion.${id}`, 'bool', '1');
-    this.storage.write('next_discussion_id', 'number', (id + 1).toString());
-
     this.event.emit('new_discussion', event);
 
     return event;
-  }
-
-  async pin(discussion: number, category: number) {
-    if (!(await this.storage.has(`discussion.${discussion}`)))
-      return Promise.reject('invalid discussion');
-
-    const event = [discussion, category];
-
-    this.storage.write(`category.${category}.pin`, 'number', discussion.toString());
-
-    this.event.emit('pin', event);
   }
 
   async vote(voter: string, discussion: number, choice: number) {
@@ -50,7 +38,6 @@ export default class Discussions extends Agent {
       return Promise.reject('invalid discussion');
 
     const event = [voter, discussion, choice];
-
     this.event.emit('new_vote', event);
 
     return event;

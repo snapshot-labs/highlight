@@ -10,12 +10,10 @@ export default class Event {
   }
 
   emit(key: string, data: any[]) {
-    this.process.emitEvent({
+    this.process.emit({
       agent: this.agent,
       key,
-      events: JSON.stringify(data)
+      data
     });
-
-    return true;
   }
 }

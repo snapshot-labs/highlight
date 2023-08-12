@@ -1,4 +1,3 @@
-import db from './helpers/mysql';
 import Process from './process';
 
 export default class Storage {
@@ -11,29 +10,18 @@ export default class Storage {
   }
 
   async has(key: string) {
-    return await this.process.hasStorage(this.agent, key);
+    return await this.process.has(this.agent, key);
   }
 
-  async read(key: string): Promise<string | boolean | number> {
-    return await this.process.readStorage(this.agent, key);
+  async get(key: string): Promise<any> {
+    return await this.process.get(this.agent, key);
   }
 
-  write(key: string, type: string, value: string) {
-    this.process.writeStorage({
+  write(key: string, value: any) {
+    this.process.write({
       agent: this.agent,
       key,
-      type,
       value
     });
-
-    return true;
-  }
-
-  async remove(key: string) {
-    const query = 'DELETE FROM storages WHERE agent = ? AND `key` = ? LIMIT 1';
-
-    await db.queryAsync(query, [this.agent, key]);
-
-    return true;
   }
 }

@@ -4,9 +4,9 @@ import Process from './process';
 
 export default class Agent {
   public id: string;
+  public process: Process;
   public storage: Storage;
   public event: Event;
-  public process: Process;
 
   constructor(id: string, process: Process) {
     this.id = id;
