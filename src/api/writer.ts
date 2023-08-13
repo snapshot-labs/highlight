@@ -1,6 +1,6 @@
 import type { CheckpointWriter } from '@snapshot-labs/checkpoint';
 import { Category, Discussion, Vote } from '../../.checkpoint/models';
-import { getJSON } from './utils';
+import { getJSON } from '../utils';
 
 // @ts-ignore
 export const handleNewCategory: CheckpointWriter = async ({ payload, source }) => {
