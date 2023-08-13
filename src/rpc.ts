@@ -1,7 +1,8 @@
 import express from 'express';
 import Highlight from './highlight/highlight';
 import agents from './agents';
-import { rpcSuccess, rpcError } from './utils';
+import { rpcSuccess, rpcError, sleep } from './utils';
+import { lastIndexedMci } from './api/provider';
 
 export const highlight = new Highlight({ agents });
 // highlight.reset();
@@ -39,6 +40,25 @@ router.post('/', async (req, res) => {
       return rpcError(res, 404, -32601, 'requested method not found', id);
     }
   }
+});
+
+router.post('/relayer', async (req, res) => {
+  const { body } = req;
+
+  const result = await highlight.postJoint({
+    unit: {
+      version: '0x1',
+      messages: body.params.messages,
+      timestamp: ~~(Date.now() / 1e3),
+      signature: ''
+    }
+  });
+
+  while ((result as number) > lastIndexedMci) {
+    await sleep(1e2);
+  }
+
+  return rpcSuccess(res, result, body.id);
 });
 
 export default router;
