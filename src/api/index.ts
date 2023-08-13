@@ -6,7 +6,7 @@ import config from './config.json';
 import * as writer from './writer';
 
 const dir = __dirname.endsWith('dist/src/api') ? '../' : '';
-const schemaFile = path.join(__dirname, `${dir}../api/schema.gql`);
+const schemaFile = path.join(__dirname, `${dir}../../src/api/schema.gql`);
 const schema = fs.readFileSync(schemaFile, 'utf8');
 
 export const checkpoint = new Checkpoint(config, writer, schema, {
