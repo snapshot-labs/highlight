@@ -10,6 +10,10 @@ const dir = __dirname.endsWith('dist/src/api') ? '../' : '';
 const schemaFile = path.join(__dirname, `${dir}../../src/api/schema.gql`);
 const schema = fs.readFileSync(schemaFile, 'utf8');
 
+if (process.env.CA_CERT) {
+  process.env.CA_CERT = process.env.CA_CERT.replace(/\\n/g, '\n');
+}
+
 export const checkpoint = new Checkpoint(config, writer, schema, {
   logLevel: LogLevel.Info,
   prettifyLogs: process.env.NODE_ENV !== 'production',

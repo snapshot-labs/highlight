@@ -18,6 +18,26 @@
           "fn": "handleNewVote"
         }
       ]
+    },
+    {
+      "contract": "0x4",
+      "start": 1,
+      "events": [
+        {
+          "name": "profile_updated",
+          "fn": "handleProfileUpdated"
+        }
+      ]
+    },
+    {
+      "contract": "0x3",
+      "start": 1,
+      "events": [
+        {
+          "name": "sx_new_vote",
+          "fn": "handleNewSXVote"
+        }
+      ]
     }
   ]
 }

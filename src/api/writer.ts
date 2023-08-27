@@ -1,5 +1,5 @@
 import type { CheckpointWriter } from '@snapshot-labs/checkpoint';
-import { Category, Discussion, Vote } from '../../.checkpoint/models';
+import { Category, Discussion, Vote, SXVote, User } from '../../.checkpoint/models';
 import { getJSON } from '../utils';
 
 // @ts-ignore
@@ -84,6 +84,15 @@ export const handleNewDiscussion: CheckpointWriter = async ({ payload, source })
       await category.save();
     }
   }
+
+  let profile = await User.loadEntity(author);
+
+  if (!profile) {
+    profile = new User(author);
+  }
+  profile.discussion_count += 1;
+
+  await profile.save();
 };
 
 // @ts-ignore
@@ -122,4 +131,58 @@ export const handleNewVote: CheckpointWriter = async ({ payload, source }) => {
 
     await discussion.save();
   }
+
+  let profile = await User.loadEntity(voter);
+
+  if (!profile) {
+    profile = new User(voter);
+  }
+  profile.vote_count += 1;
+
+  await profile.save();
+};
+
+// @ts-ignore
+export const handleProfileUpdated: CheckpointWriter = async ({ payload }) => {
+  console.log('Handle profile updated', payload);
+
+  const [user, metadataUri] = payload.data;
+
+  let profile = await User.loadEntity(user);
+
+  if (!profile) {
+    profile = new User(user);
+  }
+
+  try {
+    const metadata: any = await getJSON(metadataUri);
+
+    if (metadata.name) profile.name = metadata.name;
+    if (metadata.about) profile.about = metadata.about;
+  } catch (e) {
+    console.log(e);
+  }
+
+  await profile.save();
+};
+
+// @ts-ignore
+export const handleNewSXVote: CheckpointWriter = async ({ payload }) => {
+  console.log('Handle new sx vote', payload);
+
+  const [space, voter, proposalId, choice, chainId, sig] = payload.data;
+  const id = `${space}/${proposalId}/${voter}`;
+
+  let vote = await SXVote.loadEntity(id);
+  if (!vote) {
+    vote = new SXVote(id);
+  }
+  vote.space = space;
+  vote.voter = voter;
+  vote.proposal_id = proposalId;
+  vote.choice = choice;
+  vote.chain_id = chainId;
+  vote.sig = sig;
+
+  await vote.save();
 };

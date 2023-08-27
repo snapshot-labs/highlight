@@ -18,7 +18,7 @@ type Discussion {
   title: String
   content: Text
   category: Category
-  author: String
+  author: User
   parent: Int
   score: Float!
   reply_count: Int!
@@ -28,7 +28,26 @@ type Discussion {
 
 type Vote {
   id: String!
-  voter: String
+  voter: User
   discussion: Discussion
   choice: Int
+}
+
+type User {
+  id: String!
+  name: String
+  about: Text
+  discussion_count: Int!
+  vote_count: Int!
+}
+
+type SXVote {
+  id: String!
+  space: String
+  voter: String
+  proposal_id: String
+  choice: Int
+  vp: Int
+  chain_id: Int
+  sig: Text
 }
