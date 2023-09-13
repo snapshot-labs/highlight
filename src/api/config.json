@@ -2,40 +2,68 @@
   "network_node_url": "http://localhost:3001",
   "sources": [
     {
-      "contract": "0x1",
+      "contract": "discussions",
       "start": 1,
       "events": [
         {
-          "name": "new_category",
-          "fn": "handleNewCategory"
+          "name": "add_category",
+          "fn": "handleAddCategory"
         },
         {
-          "name": "new_discussion",
-          "fn": "handleNewDiscussion"
+          "name": "edit_category",
+          "fn": "handleEditCategory"
         },
         {
-          "name": "new_vote",
-          "fn": "handleNewVote"
+          "name": "remove_category",
+          "fn": "handleRemoveCategory"
+        },
+        {
+          "name": "add_topic",
+          "fn": "handleAddTopic"
+        },
+        {
+          "name": "edit_topic",
+          "fn": "handleEditTopic"
+        },
+        {
+          "name": "remove_topic",
+          "fn": "handleRemoveTopic"
+        },
+        {
+          "name": "pin_topic",
+          "fn": "handlePinTopic"
+        },
+        {
+          "name": "unpin_topic",
+          "fn": "handleUnpinTopic"
+        },
+        {
+          "name": "vote",
+          "fn": "handleTopicVote"
+        },
+        {
+          "name": "unvote",
+          "fn": "handleTopicUnvote"
         }
       ]
     },
     {
-      "contract": "0x4",
+      "contract": "profiles",
       "start": 1,
       "events": [
         {
-          "name": "profile_updated",
-          "fn": "handleProfileUpdated"
+          "name": "edit_profile",
+          "fn": "handleEditProfile"
         }
       ]
     },
     {
-      "contract": "0x3",
+      "contract": "votes",
       "start": 1,
       "events": [
         {
-          "name": "sx_new_vote",
-          "fn": "handleNewSXVote"
+          "name": "vote",
+          "fn": "handleVote"
         }
       ]
     }

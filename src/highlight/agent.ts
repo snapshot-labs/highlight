@@ -1,17 +1,46 @@
-import Storage from './storage';
-import Event from './event';
 import Process from './process';
 
 export default class Agent {
   public id: string;
   public process: Process;
-  public storage: Storage;
-  public event: Event;
 
   constructor(id: string, process: Process) {
     this.id = id;
     this.process = process;
-    this.storage = new Storage(id, process);
-    this.event = new Event(id, process);
+  }
+
+  assert(condition, e) {
+    if (condition) return Promise.reject(e);
+  }
+
+  async has(key: string) {
+    return await this.process.has(this.id, key);
+  }
+
+  async get(key: string): Promise<any> {
+    return await this.process.get(this.id, key);
+  }
+
+  write(key: string, value: any) {
+    this.process.write({
+      agent: this.id,
+      key,
+      value
+    });
+  }
+
+  delete(key: string) {
+    this.process.delete({
+      agent: this.id,
+      key
+    });
+  }
+
+  emit(key: string, data: any[]) {
+    this.process.emit({
+      agent: this.id,
+      key,
+      data
+    });
   }
 }

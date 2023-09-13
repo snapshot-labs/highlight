@@ -5,6 +5,7 @@ export default class Process {
   public events: Event[] = [];
   public writes: Storage[] = [];
   public state: Record<string, Record<string, string>> = {};
+  public steps = 0;
 
   emit(event: Event) {
     this.events.push(event);
@@ -14,12 +15,14 @@ export default class Process {
     const storage = this.state[`${agent}:${key}`];
     if (storage) return storage;
 
-    const value = await redis.get(`storage:${agent}:${key}`);
+    this.steps++;
+    const value = await redis.get(`state:${agent}:${key}`);
 
     return JSON.parse(value as string);
   }
 
   async has(agent: string, key: string) {
+    this.steps++;
     return !!(await this.get(agent, key));
   }
 
@@ -28,17 +31,27 @@ export default class Process {
     this.state[`${storage.agent}:${storage.key}`] = storage.value;
   }
 
+  delete(storage: Storage) {
+    this.writes.push(storage);
+    delete this.state[`${storage.agent}:${storage.key}`];
+  }
+
   async execute() {
     const multi = redis.multi();
 
     if (this.writes.length > 0) {
       for (const write of this.writes) {
-        multi.set(`storage:${write.agent}:${write.key}`, JSON.stringify(write.value));
+        if (write.value === undefined) {
+          multi.del(`state:${write.agent}:${write.key}`);
+        } else {
+          multi.set(`state:${write.agent}:${write.key}`, JSON.stringify(write.value));
+        }
       }
     }
 
     let id = 0;
     if (this.events.length > 0) {
+      this.steps++;
       id = parseInt((await redis.get('events:id')) || '0');
 
       for (const event of this.events) {
@@ -49,8 +62,14 @@ export default class Process {
       multi.set('events:id', id);
     }
 
-    await multi.exec();
+    if (this.writes.length > 0 || this.events.length > 0) {
+      this.steps++;
+      await multi.exec();
+    }
 
-    return id;
+    return {
+      last_event_id: id,
+      events: this.events
+    };
   }
 }

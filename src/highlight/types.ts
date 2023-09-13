@@ -3,10 +3,12 @@ export interface PostJointRequest {
 }
 
 export interface Unit {
+  unit_hash: string;
   version: string;
+  signature: string;
+  sender_address: string;
   messages: Message[];
   timestamp: number;
-  signature: string;
 }
 
 export interface Message {
@@ -28,7 +30,12 @@ export interface GetEventsRequest {
 export interface Storage {
   agent: string;
   key: string;
-  value: any;
+  value?: any;
+}
+
+export interface DeleteStorage {
+  agent: string;
+  key: string;
 }
 
 export interface Event {

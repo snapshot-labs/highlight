@@ -1,23 +1,21 @@
-import type { CheckpointWriter } from '@snapshot-labs/checkpoint';
-import { Category, Discussion, Vote, SXVote, User } from '../../.checkpoint/models';
+import { formatUnits } from '@ethersproject/units';
+import { Category, Topic, TopicVote, User, Vote } from '../../.checkpoint/models';
 import { getJSON } from '../utils';
+import { getStorage } from './utils';
 
-// @ts-ignore
-export const handleNewCategory: CheckpointWriter = async ({ payload, source }) => {
-  console.log('Handle new category', payload);
+/* Discussions */
 
-  const [id, parent, metadataUri] = payload.data;
-  // @ts-ignore
-  const categoryId = `${source.contract}/${id}`;
+export const handleAddCategory = async ({ payload }) => {
+  console.log('Handle add category', payload);
 
-  const category = new Category(categoryId);
-  category.category_id = id;
-  // @ts-ignore
-  category.parent = `${source.contract}/${parent}`;
-  category.metadata_uri = metadataUri;
+  const [id, parent, metadataURI] = payload.data;
+
+  const category = new Category(id);
+  category.parent = parent;
+  category.metadata_uri = metadataURI;
 
   try {
-    const metadata: any = await getJSON(metadataUri);
+    const metadata: any = await getJSON(metadataURI);
 
     if (metadata.name) category.name = metadata.name;
     if (metadata.about) category.about = metadata.about;
@@ -28,7 +26,7 @@ export const handleNewCategory: CheckpointWriter = async ({ payload, source }) =
   await category.save();
 
   if (parent !== 0) {
-    const parentCategory = await Category.loadEntity(category.parent);
+    const parentCategory = await Category.loadEntity(category.parent.toString());
 
     if (parentCategory) {
       parentCategory.category_count += 1;
@@ -38,48 +36,86 @@ export const handleNewCategory: CheckpointWriter = async ({ payload, source }) =
   }
 };
 
-// @ts-ignore
-export const handleNewDiscussion: CheckpointWriter = async ({ payload, source }) => {
-  console.log('Handle new discussion', payload);
+export const handleEditCategory = async ({ payload }) => {
+  console.log('Handle edit category', payload);
 
-  const [discussionNum, author, categoryNum, parent, metadataUri] = payload.data;
-  // @ts-ignore
-  const discussionId = `${source.contract}/${discussionNum}`;
-  // @ts-ignore
-  const categoryId = `${source.contract}/${categoryNum}`;
-  // @ts-ignore
-  const parentId = `${source.contract}/${parent}`;
+  const [id, metadataURI] = payload.data;
 
-  const discussion = new Discussion(discussionId);
-  discussion.discussion_id = discussionNum;
-  discussion.category = categoryId;
-  discussion.author = author;
-  discussion.parent = parent;
-  discussion.metadata_uri = metadataUri;
+  const category = await Category.loadEntity(id);
+
+  if (category) {
+    try {
+      const metadata: any = await getJSON(metadataURI);
+
+      if (metadata.name) category.name = metadata.name;
+      if (metadata.about) category.about = metadata.about;
+
+      await category.save();
+    } catch (e) {
+      console.log(e);
+    }
+  }
+};
+
+export const handleRemoveCategory = async ({ payload }) => {
+  console.log('Handle remove category', payload);
+
+  const [id] = payload.data;
+
+  const category = await Category.loadEntity(id);
+
+  if (category) {
+    const parent = category.parent || 0;
+
+    if (parent !== 0) {
+      const parentCategory = await Category.loadEntity(parent.toString());
+
+      if (parentCategory) {
+        parentCategory.category_count -= 1;
+
+        await parentCategory.save();
+      }
+    }
+
+    await category.delete();
+  }
+};
+
+export const handleAddTopic = async ({ payload }) => {
+  console.log('Handle add topic', payload);
+
+  const [id, author, categoryId, parent, metadataUri] = payload.data;
+
+  const topic = new Topic(id);
+  topic.category = categoryId;
+  topic.author = author;
+  topic.parent = parent;
+  topic.metadata_uri = metadataUri;
+  topic.pinned = false;
 
   try {
     const metadata: any = await getJSON(metadataUri);
 
-    if (metadata.title) discussion.title = metadata.title;
-    if (metadata.content) discussion.content = metadata.content;
+    if (metadata.title) topic.title = metadata.title;
+    if (metadata.content) topic.content = metadata.content;
   } catch (e) {
     console.log(e);
   }
 
-  await discussion.save();
+  await topic.save();
 
   if (parent !== 0) {
-    const parentDiscussion = await Discussion.loadEntity(parentId);
+    const parentTopic = await Topic.loadEntity(parent);
 
-    if (parentDiscussion) {
-      parentDiscussion.reply_count += 1;
+    if (parentTopic) {
+      parentTopic.reply_count += 1;
 
-      await parentDiscussion.save();
+      await parentTopic.save();
     }
   } else {
     const category = await Category.loadEntity(categoryId);
     if (category) {
-      category.discussion_count += 1;
+      category.topic_count += 1;
 
       await category.save();
     }
@@ -90,46 +126,104 @@ export const handleNewDiscussion: CheckpointWriter = async ({ payload, source })
   if (!profile) {
     profile = new User(author);
   }
-  profile.discussion_count += 1;
+  profile.topic_count += 1;
 
   await profile.save();
 };
 
-// @ts-ignore
-export const handleNewVote: CheckpointWriter = async ({ payload, source }) => {
+export const handleEditTopic = async ({ payload }) => {
+  console.log('Handle edit topic', payload);
+
+  const [id, metadataURI] = payload.data;
+
+  const topic = await Topic.loadEntity(id);
+
+  if (topic) {
+    try {
+      const metadata: any = await getJSON(metadataURI);
+
+      if (metadata.title) topic.title = metadata.title;
+      if (metadata.content) topic.content = metadata.content;
+
+      await topic.save();
+    } catch (e) {
+      console.log(e);
+    }
+  }
+};
+
+export const handleRemoveTopic = async ({ payload }) => {
+  console.log('Handle remove topic', payload);
+
+  const [id] = payload.data;
+
+  const topic = await Topic.loadEntity(id);
+
+  if (topic) {
+    await topic.delete();
+  }
+};
+
+export const handlePinTopic = async ({ payload }) => {
+  console.log('Handle pin topic', payload);
+
+  const [id] = payload.data;
+
+  const topic = await Topic.loadEntity(id);
+
+  if (topic) {
+    topic.pinned = true;
+
+    await topic.save();
+  }
+};
+
+export const handleUnpinTopic = async ({ payload }) => {
+  console.log('Handle unpin topic', payload);
+
+  const [id] = payload.data;
+
+  const topic = await Topic.loadEntity(id);
+
+  if (topic) {
+    topic.pinned = false;
+
+    await topic.save();
+  }
+};
+
+export const handleTopicVote = async ({ payload }) => {
   console.log('Handle new vote', payload);
 
-  const [voter, discussionNum, choice] = payload.data;
-  // @ts-ignore
-  const discussionId = `${source.contract}/${discussionNum}`;
-  const voteId = `${voter}/${discussionId}`;
+  const [voter, topicId, choice] = payload.data;
+  const id = `${voter}/${topicId}`;
   let newVote = false;
   let previousVoteChoice;
 
-  let vote = await Vote.loadEntity(voteId);
+  let vote = await TopicVote.loadEntity(id);
   if (!vote) {
-    vote = new Vote(voteId);
+    vote = new TopicVote(id);
     newVote = true;
   } else {
     previousVoteChoice = vote.choice;
   }
   vote.voter = voter;
-  vote.discussion = discussionId;
+  vote.topic = topicId;
   vote.choice = choice;
 
   await vote.save();
 
-  const discussion = await Discussion.loadEntity(discussionId);
+  const topic = await Topic.loadEntity(topicId);
 
-  if (discussion) {
-    discussion.score += choice;
+  if (topic) {
+    topic.score += choice;
     if (newVote) {
-      discussion.vote_count += 1;
+      topic.vote_count += 1;
     } else {
-      discussion.score -= previousVoteChoice;
+      topic.score -= previousVoteChoice;
     }
 
-    await discussion.save();
+    await topic.save();
   }
 
   let profile = await User.loadEntity(voter);
@@ -142,8 +236,31 @@ export const handleNewVote: CheckpointWriter = async ({ payload, source }) => {
   await profile.save();
 };
 
-// @ts-ignore
-export const handleProfileUpdated: CheckpointWriter = async ({ payload }) => {
+export const handleTopicUnvote = async ({ payload }) => {
+  console.log('Handle unvote', payload);
+
+  const [voter, topic] = payload.data;
+  const id = `${voter}/${topic}`;
+
+  const vote = await TopicVote.loadEntity(id);
+
+  if (vote) {
+    await vote.delete();
+  }
+
+  let profile = await User.loadEntity(voter);
+
+  if (!profile) {
+    profile = new User(voter);
+  }
+  profile.vote_count -= 1;
+
+  await profile.save();
+};
+
+/* Profiles */
+
+export const handleEditProfile = async ({ payload }) => {
   console.log('Handle profile updated', payload);
 
   const [user, metadataUri] = payload.data;
@@ -166,21 +283,32 @@ export const handleProfileUpdated: CheckpointWriter = async ({ payload }) => {
   await profile.save();
 };
 
-// @ts-ignore
-export const handleNewSXVote: CheckpointWriter = async ({ payload }) => {
+/* Votes */
+
+export const handleVote = async ({ payload }) => {
   console.log('Handle new sx vote', payload);
 
   const [space, voter, proposalId, choice, chainId, sig] = payload.data;
   const id = `${space}/${proposalId}/${voter}`;
 
-  let vote = await SXVote.loadEntity(id);
+  // Get voting power
+  const contract = '0x2ECE234Efb5c9b3D4c7648Ffc7D185912A56Ce60';
+  const index = 0;
+  const blockNum = 9552533;
+
+  const storage = await getStorage(contract, index, blockNum, 5, voter);
+
+  let vote = await Vote.loadEntity(id);
   if (!vote) {
-    vote = new SXVote(id);
+    vote = new Vote(id);
   }
-  vote.space = space;
   vote.voter = voter;
-  vote.proposal_id = proposalId;
+  vote.space = space;
+  vote.proposal = proposalId;
   vote.choice = choice;
+  vote.vp = parseFloat(formatUnits(storage, 18));
+  vote.vp_raw = storage;
+  vote.created = ~~(Date.now() / 1e3); // @TODO change to unit timestamp
   vote.chain_id = chainId;
   vote.sig = sig;
 

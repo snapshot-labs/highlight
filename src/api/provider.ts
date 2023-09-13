@@ -52,7 +52,7 @@ export class HighlightProvider extends BaseProvider {
 
     for (const source of this.instance.config.sources || []) {
       for (const sourceEvent of source.events) {
-        if (sourceEvent.name === event.key) {
+        if (source.contract === event.agent && sourceEvent.name === event.key) {
           this.log.info(
             { contract: source.contract, event: sourceEvent.name, handlerFn: sourceEvent.fn },
             'found event'

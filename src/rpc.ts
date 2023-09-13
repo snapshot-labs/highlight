@@ -3,9 +3,14 @@ import Highlight from './highlight/highlight';
 import agents from './agents';
 import { rpcSuccess, rpcError, sleep } from './utils';
 import { lastIndexedMci } from './api/provider';
+import { BigNumberish, ec, hash, selector } from 'starknet';
+import * as weierstrass from '@noble/curves/abstract/weierstrass';
+
+const RELAYER_PRIVATE_KEY = process.env.RELAYER_PRIVATE_KEY || '0x1234567890987654321';
+const RELAYER_PUBLIC_KEY = process.env.RELAYER_PUBLIC_KEY || '0x1234567890987654321';
 
 export const highlight = new Highlight({ agents });
-// highlight.reset();
+highlight.reset().then(() => console.log('Highlight reset complete'));
 
 const router = express.Router();
 
@@ -45,20 +50,38 @@ router.post('/', async (req, res) => {
 router.post('/relayer', async (req, res) => {
   const { body } = req;
 
-  const result = await highlight.postJoint({
+  const joint = {
     unit: {
+      unit_hash: '',
       version: '0x1',
       messages: body.params.messages,
       timestamp: ~~(Date.now() / 1e3),
+      sender_address: RELAYER_PUBLIC_KEY,
       signature: ''
     }
-  });
+  };
+  const unitRaw: any = structuredClone(joint.unit);
+  delete unitRaw.unit_hash;
+  delete unitRaw.signature;
 
-  while ((result as number) > lastIndexedMci) {
-    await sleep(1e2);
+  const data: BigNumberish[] = [selector.starknetKeccak(JSON.stringify(unitRaw))];
+  const unitHash = hash.computeHashOnElements(data);
+  const signature: weierstrass.SignatureType = ec.starkCurve.sign(unitHash, RELAYER_PRIVATE_KEY);
+
+  joint.unit.unit_hash = unitHash;
+  joint.unit.signature = signature.toCompactHex();
+
+  try {
+    const result = await highlight.postJoint(joint);
+
+    while ((result?.last_event_id as number) > lastIndexedMci) {
+      await sleep(1e2);
+    }
+
+    return rpcSuccess(res, result, body.id);
+  } catch (e) {
+    return rpcError(res, 500, -32000, e, body.id);
   }
-
-  return rpcSuccess(res, result, body.id);
 });
 
 export default router;

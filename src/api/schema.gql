@@ -3,22 +3,21 @@ scalar Text
 
 type Category {
   id: String!
-  category_id: Int!
   name: String
   about: Text
-  parent: String!
-  discussion_count: Int!
+  parent: Int!
+  topic_count: Int!
   category_count: Int!
   metadata_uri: String
 }
 
-type Discussion {
+type Topic {
   id: String!
-  discussion_id: Int
   title: String
   content: Text
   category: Category
   author: User
+  pinned: Boolean
   parent: Int
   score: Float!
   reply_count: Int!
@@ -26,10 +25,10 @@ type Discussion {
   metadata_uri: String
 }
 
-type Vote {
+type TopicVote {
   id: String!
   voter: User
-  discussion: Discussion
+  topic: Topic
   choice: Int
 }
 
@@ -37,17 +36,19 @@ type User {
   id: String!
   name: String
   about: Text
-  discussion_count: Int!
+  topic_count: Int!
   vote_count: Int!
 }
 
-type SXVote {
+type Vote { # rename to vote
   id: String!
-  space: String
-  voter: String
-  proposal_id: String
+  voter: String # User entity in sx-api
+  space: String # Space entity in sx-api
+  proposal: Int
   choice: Int
-  vp: Int
-  chain_id: Int
-  sig: Text
+  vp: Float
+  vp_raw: String # not part of sx-api
+  created: Int
+  chain_id: Int # not part of sx-api
+  sig: Text # not part of sx-api
 }

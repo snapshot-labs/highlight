@@ -14,6 +14,7 @@ if (process.env.CA_CERT) {
   process.env.CA_CERT = process.env.CA_CERT.replace(/\\n/g, '\n');
 }
 
+// @ts-ignore
 export const checkpoint = new Checkpoint(config, writer, schema, {
   logLevel: LogLevel.Info,
   prettifyLogs: process.env.NODE_ENV !== 'production',
@@ -23,7 +24,7 @@ export const checkpoint = new Checkpoint(config, writer, schema, {
 });
 
 async function start() {
-  await sleep(20e3);
+  await sleep(5e3);
   await checkpoint.reset();
   await checkpoint.resetMetadata();
   await checkpoint.start();
