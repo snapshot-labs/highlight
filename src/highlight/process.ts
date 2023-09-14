@@ -1,11 +1,16 @@
-import redis from './redis';
 import { Storage, Event } from './types';
+import type { Adapter } from './adapter/adapter';
 
 export default class Process {
+  private adapter: Adapter;
   public events: Event[] = [];
   public writes: Storage[] = [];
   public state: Record<string, Record<string, string>> = {};
   public steps = 0;
+
+  constructor({ adapter }) {
+    this.adapter = adapter;
+  }
 
   emit(event: Event) {
     this.events.push(event);
@@ -16,9 +21,7 @@ export default class Process {
     if (storage) return storage;
 
     this.steps++;
-    const value = await redis.get(`state:${agent}:${key}`);
-
-    return JSON.parse(value as string);
+    return await this.adapter.get(`state:${agent}:${key}`);
   }
 
   async has(agent: string, key: string) {
@@ -37,14 +40,14 @@ export default class Process {
   }
 
   async execute() {
-    const multi = redis.multi();
+    const multi = this.adapter.multi();
 
     if (this.writes.length > 0) {
       for (const write of this.writes) {
         if (write.value === undefined) {
           multi.del(`state:${write.agent}:${write.key}`);
         } else {
-          multi.set(`state:${write.agent}:${write.key}`, JSON.stringify(write.value));
+          multi.set(`state:${write.agent}:${write.key}`, write.value);
         }
       }
     }
@@ -52,12 +55,12 @@ export default class Process {
     let id = 0;
     if (this.events.length > 0) {
       this.steps++;
-      id = parseInt((await redis.get('events:id')) || '0');
+      id = (await this.adapter.get('events:id')) || 0;
 
       for (const event of this.events) {
         id++;
         event.id = id;
-        multi.set(`event:${id}`, JSON.stringify(event));
+        multi.set(`event:${id}`, event);
       }
       multi.set('events:id', id);
     }

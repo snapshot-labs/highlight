@@ -4,7 +4,7 @@ import Checkpoint, { LogLevel } from '@snapshot-labs/checkpoint';
 import { HighlightProvider } from './provider';
 import config from './config.json';
 import * as writer from './writer';
-import { sleep } from '../utils';
+// import { sleep } from '../utils';
 
 const dir = __dirname.endsWith('dist/src/api') ? '../' : '';
 const schemaFile = path.join(__dirname, `${dir}../../src/api/schema.gql`);
@@ -16,7 +16,7 @@ if (process.env.CA_CERT) {
 
 // @ts-ignore
 export const checkpoint = new Checkpoint(config, writer, schema, {
-  logLevel: LogLevel.Info,
+  logLevel: LogLevel.Error,
   prettifyLogs: process.env.NODE_ENV !== 'production',
   NetworkProvider: HighlightProvider,
   fetchInterval: 5e2,
@@ -24,9 +24,11 @@ export const checkpoint = new Checkpoint(config, writer, schema, {
 });
 
 async function start() {
-  await sleep(5e3);
+  // await sleep(5e3);
   await checkpoint.reset();
   await checkpoint.resetMetadata();
+  console.log('Checkpoint ready');
+
   await checkpoint.start();
 }
 

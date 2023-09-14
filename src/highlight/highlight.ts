@@ -1,15 +1,17 @@
 import { BigNumberish, ec, hash, selector } from 'starknet';
 import Agent from './agent';
 import Process from './process';
-import redis from './redis';
 import type { InvokeRequest, GetEventsRequest, PostJointRequest } from './types';
+import type { Adapter } from './adapter/adapter';
 
 const RELAYER_PUBLIC_KEY = process.env.RELAYER_PUBLIC_KEY || '';
 
 export default class Highlight {
+  private adapter: Adapter;
   public agents: Record<string, Agent>;
 
-  constructor({ agents }) {
+  constructor({ adapter, agents }) {
+    this.adapter = adapter;
     this.agents = agents;
   }
 
@@ -35,7 +37,7 @@ export default class Highlight {
     let steps = 0;
 
     if (params.unit.messages.length > 0) {
-      const process = new Process();
+      const process = new Process({ adapter: this.adapter });
 
       try {
         for (const message of params.unit.messages) {
@@ -52,11 +54,11 @@ export default class Highlight {
       }
     }
 
-    let id = parseInt((await redis.get('units:id')) || '0');
+    let id = (await this.adapter.get('units:id')) || 0;
 
     id++;
-    const multi = redis.multi();
-    multi.set(`unit:${id}`, JSON.stringify(params.unit));
+    const multi = this.adapter.multi();
+    multi.set(`unit:${id}`, params.unit);
     multi.set('units:id', id);
 
     await multi.exec();
@@ -81,12 +83,12 @@ export default class Highlight {
     const keys = [...Array(params.end - params.start).keys()].map(
       (key, i) => `event:${i + params.start}`
     );
-    const result = await redis.mGet(keys);
+    const events = await this.adapter.mget(keys);
 
-    return result.filter(event => event !== null).map(event => JSON.parse(event as string));
+    return events.filter(event => event !== null);
   }
 
   async reset() {
-    return await redis.flushAll();
+    return await this.adapter.reset();
   }
 }

@@ -1,15 +1,18 @@
 import express from 'express';
-import Highlight from './highlight/highlight';
-import agents from './agents';
-import { rpcSuccess, rpcError, sleep } from './utils';
-import { lastIndexedMci } from './api/provider';
 import { BigNumberish, ec, hash, selector } from 'starknet';
 import * as weierstrass from '@noble/curves/abstract/weierstrass';
+import Highlight from './highlight/highlight';
+import { RedisAdapter } from './highlight/adapter/redis';
+import agents from './agents';
+import { lastIndexedMci } from './api/provider';
+import { rpcSuccess, rpcError, sleep } from './utils';
 
 const RELAYER_PRIVATE_KEY = process.env.RELAYER_PRIVATE_KEY || '0x1234567890987654321';
 const RELAYER_PUBLIC_KEY = process.env.RELAYER_PUBLIC_KEY || '0x1234567890987654321';
+const DATABASE_URL = process.env.DATABASE_URL || '';
 
-export const highlight = new Highlight({ agents });
+const adapter = new RedisAdapter({ url: DATABASE_URL });
+export const highlight = new Highlight({ adapter, agents });
 highlight.reset().then(() => console.log('Highlight reset complete'));
 
 const router = express.Router();
