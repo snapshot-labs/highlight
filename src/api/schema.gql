@@ -2,7 +2,7 @@ scalar Id
 scalar Text
 
 type Category {
-  id: String!
+  id: Int!
   name: String
   about: Text
   parent: Int!
@@ -12,7 +12,7 @@ type Category {
 }
 
 type Topic {
-  id: String!
+  id: Int!
   title: String
   content: Text
   category: Category
