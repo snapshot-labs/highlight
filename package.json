@@ -4,7 +4,8 @@
   "license": "MIT",
   "scripts": {
     "lint": "eslint src/ --ext .ts --fix",
-    "build": "checkpoint generate -c ./src/api/config.json -s ./src/api/schema.gql && tsc",
+    "prebuild": "checkpoint generate -c ./src/api/config.json -s ./src/api/schema.gql",
+    "build": "tsc",
     "dev": "nodemon src/index.ts",
     "start": "node dist/src/index.js"
   },

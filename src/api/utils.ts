@@ -15,3 +15,13 @@ export async function getStorage(contract, index, blockNum, chainId, address) {
 
   return BigNumber.from(result).toBigInt().toString();
 }
+
+export async function getEntity(entity, id) {
+  let item = await entity.loadEntity(id);
+
+  if (!item) {
+    item = new entity(id);
+  }
+
+  return item;
+}

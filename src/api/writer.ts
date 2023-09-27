@@ -1,7 +1,15 @@
 import { formatUnits } from '@ethersproject/units';
-import { Category, Topic, TopicVote, User, Vote } from '../../.checkpoint/models';
+import {
+  Category,
+  Topic,
+  TopicVote,
+  User,
+  Profile,
+  Statement,
+  Vote
+} from '../../.checkpoint/models';
 import { getJSON } from '../utils';
-import { getStorage } from './utils';
+import { getEntity, getStorage } from './utils';
 
 /* Discussions */
 
@@ -26,7 +34,7 @@ export const handleAddCategory = async ({ payload }) => {
   await category.save();
 
   if (parent !== 0) {
-    const parentCategory = await Category.loadEntity(category.parent);
+    const parentCategory = await Category.loadEntity(category.parent.toString());
 
     if (parentCategory) {
       parentCategory.category_count += 1;
@@ -68,7 +76,7 @@ export const handleRemoveCategory = async ({ payload }) => {
     const parent = category.parent || 0;
 
     if (parent !== 0) {
-      const parentCategory = await Category.loadEntity(parent);
+      const parentCategory = await Category.loadEntity(parent.toString());
 
       if (parentCategory) {
         parentCategory.category_count -= 1;
@@ -193,7 +201,7 @@ export const handleUnpinTopic = async ({ payload }) => {
 };
 
 export const handleTopicVote = async ({ payload }) => {
-  console.log('Handle new vote', payload);
+  console.log('Handle topic vote', payload);
 
   const [voter, topicId, choice] = payload.data;
   const id = `${voter}/${topicId}`;
@@ -231,13 +239,13 @@ export const handleTopicVote = async ({ payload }) => {
   if (!profile) {
     profile = new User(voter);
   }
-  profile.vote_count += 1;
+  profile.topic_vote_count += 1;
 
   await profile.save();
 };
 
 export const handleTopicUnvote = async ({ payload }) => {
-  console.log('Handle unvote', payload);
+  console.log('Handle topic unvote', payload);
 
   const [voter, topic] = payload.data;
   const id = `${voter}/${topic}`;
@@ -253,40 +261,71 @@ export const handleTopicUnvote = async ({ payload }) => {
   if (!profile) {
     profile = new User(voter);
   }
-  profile.vote_count -= 1;
+  profile.topic_vote_count -= 1;
 
   await profile.save();
 };
 
 /* Profiles */
 
-export const handleEditProfile = async ({ payload }) => {
-  console.log('Handle profile updated', payload);
+export const handleSetProfile = async ({ payload }) => {
+  console.log('Handle set profile', payload);
 
-  const [user, metadataUri] = payload.data;
+  const [id, metadataUri] = payload.data;
 
-  let profile = await User.loadEntity(user);
+  const user = await getEntity(User, id);
+  const profile = await getEntity(Profile, id);
 
-  if (!profile) {
-    profile = new User(user);
-  }
+  user.profile = id;
+  profile.user = id;
+  profile.updated = ~~(Date.now() / 1e3);
 
   try {
     const metadata: any = await getJSON(metadataUri);
 
     if (metadata.name) profile.name = metadata.name;
     if (metadata.about) profile.about = metadata.about;
+    if (metadata.twitter) profile.twitter = metadata.twitter;
+    if (metadata.discord) profile.discord = metadata.discord;
+    if (metadata.telegram) profile.telegram = metadata.telegram;
+    if (metadata.github) profile.github = metadata.github;
   } catch (e) {
     console.log(e);
   }
 
+  await user.save();
   await profile.save();
+};
+
+export const handleSetStatement = async ({ payload }) => {
+  console.log('Handle set statement', payload);
+
+  const [id, org, metadataUri] = payload.data;
+
+  const user = await getEntity(User, id);
+  const statement = await getEntity(Statement, `${id}/${org}`);
+
+  statement.user = id;
+  statement.org = org;
+  statement.updated = ~~(Date.now() / 1e3);
+
+  try {
+    const metadata: any = await getJSON(metadataUri);
+
+    if (metadata.statement) statement.statement = metadata.statement;
+    if (metadata.status) statement.status = metadata.status;
+  } catch (e) {
+    console.log(e);
+  }
+
+  await user.save();
+  await statement.save();
 };
 
 /* Votes */
 
 export const handleVote = async ({ payload }) => {
-  console.log('Handle new sx vote', payload);
+  console.log('Handle vote', payload);
 
   const [space, voter, proposalId, choice, chainId, sig] = payload.data;
   const id = `${space}/${proposalId}/${voter}`;

@@ -10,7 +10,7 @@ export default class Agent {
   }
 
   assert(condition, e) {
-    if (condition) return Promise.reject(e);
+    if (condition) throw new Error(e);
   }
 
   async has(key: string) {
