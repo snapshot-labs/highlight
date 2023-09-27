@@ -34,10 +34,31 @@ type TopicVote {
 
 type User {
   id: String!
+  topic_count: Int!
+  topic_vote_count: Int!
+  profile: Profile
+  statements: [Statement] @derivedFrom(field: "user")
+}
+
+type Profile {
+  id: String!
+  user: User!
   name: String
   about: Text
-  topic_count: Int!
-  vote_count: Int!
+  twitter: String
+  discord: String
+  telegram: String
+  github: String
+  updated: Int
+}
+
+type Statement {
+  id: String!
+  user: User!
+  org: String!
+  statement: Text
+  status: String
+  updated: Int
 }
 
 type Vote { # rename to vote

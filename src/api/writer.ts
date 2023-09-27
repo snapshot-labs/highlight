@@ -1,7 +1,15 @@
 import { formatUnits } from '@ethersproject/units';
-import { Category, Topic, TopicVote, User, Vote } from '../../.checkpoint/models';
+import {
+  Category,
+  Topic,
+  TopicVote,
+  User,
+  Profile,
+  Statement,
+  Vote
+} from '../../.checkpoint/models';
 import { getJSON } from '../utils';
-import { getStorage } from './utils';
+import { getEntity, getStorage } from './utils';
 
 /* Discussions */
 
@@ -121,13 +129,14 @@ export const handleAddTopic = async ({ payload }) => {
     }
   }
 
-  let profile = await User.loadEntity(author);
+  const user: User = await getEntity(User, author);
+  const profile: Profile = await getEntity(Profile, author);
 
-  if (!profile) {
-    profile = new User(author);
-  }
-  profile.topic_count += 1;
+  user.profile = author;
+  user.topic_count += 1;
+  profile.user = author;
 
+  await user.save();
   await profile.save();
 };
 
@@ -193,7 +202,7 @@ export const handleUnpinTopic = async ({ payload }) => {
 };
 
 export const handleTopicVote = async ({ payload }) => {
-  console.log('Handle new vote', payload);
+  console.log('Handle topic vote', payload);
 
   const [voter, topicId, choice] = payload.data;
   const id = `${voter}/${topicId}`;
@@ -226,18 +235,19 @@ export const handleTopicVote = async ({ payload }) => {
     await topic.save();
   }
 
-  let profile = await User.loadEntity(voter);
+  const user: User = await getEntity(User, voter);
+  const profile: Profile = await getEntity(Profile, voter);
 
-  if (!profile) {
-    profile = new User(voter);
-  }
-  profile.vote_count += 1;
+  user.profile = voter;
+  user.topic_vote_count += 1;
+  profile.user = voter;
 
+  await user.save();
   await profile.save();
 };
 
 export const handleTopicUnvote = async ({ payload }) => {
-  console.log('Handle unvote', payload);
+  console.log('Handle topic unvote', payload);
 
   const [voter, topic] = payload.data;
   const id = `${voter}/${topic}`;
@@ -248,45 +258,77 @@ export const handleTopicUnvote = async ({ payload }) => {
     await vote.delete();
   }
 
-  let profile = await User.loadEntity(voter);
+  const user: User = await getEntity(User, voter);
+  const profile: Profile = await getEntity(Profile, voter);
 
-  if (!profile) {
-    profile = new User(voter);
-  }
-  profile.vote_count -= 1;
+  user.profile = voter;
+  user.topic_vote_count -= 1;
+  profile.user = voter;
 
+  await user.save();
   await profile.save();
 };
 
 /* Profiles */
 
-export const handleEditProfile = async ({ payload }) => {
-  console.log('Handle profile updated', payload);
+export const handleSetProfile = async ({ payload }) => {
+  console.log('Handle set profile', payload);
 
-  const [user, metadataUri] = payload.data;
+  const [id, metadataUri] = payload.data;
 
-  let profile = await User.loadEntity(user);
+  const user: User = await getEntity(User, id);
+  const profile: Profile = await getEntity(Profile, id);
 
-  if (!profile) {
-    profile = new User(user);
-  }
+  user.profile = id;
+  profile.user = id;
+  profile.updated = ~~(Date.now() / 1e3);
 
   try {
     const metadata: any = await getJSON(metadataUri);
 
     if (metadata.name) profile.name = metadata.name;
     if (metadata.about) profile.about = metadata.about;
+    if (metadata.twitter) profile.twitter = metadata.twitter;
+    if (metadata.discord) profile.discord = metadata.discord;
+    if (metadata.telegram) profile.telegram = metadata.telegram;
+    if (metadata.github) profile.github = metadata.github;
   } catch (e) {
     console.log(e);
   }
 
+  await user.save();
   await profile.save();
+};
+
+export const handleSetStatement = async ({ payload }) => {
+  console.log('Handle set statement', payload);
+
+  const [id, org, metadataUri] = payload.data;
+
+  const user: User = await getEntity(User, id);
+  const statement: Statement = await getEntity(Statement, `${id}/${org}`);
+
+  statement.user = id;
+  statement.org = org;
+  statement.updated = ~~(Date.now() / 1e3);
+
+  try {
+    const metadata: any = await getJSON(metadataUri);
+
+    if (metadata.statement) statement.statement = metadata.statement;
+    if (metadata.status) statement.status = metadata.status;
+  } catch (e) {
+    console.log(e);
+  }
+
+  await user.save();
+  await statement.save();
 };
 
 /* Votes */
 
 export const handleVote = async ({ payload }) => {
-  console.log('Handle new sx vote', payload);
+  console.log('Handle vote', payload);
 
   const [space, voter, proposalId, choice, chainId, sig] = payload.data;
   const id = `${space}/${proposalId}/${voter}`;
@@ -298,10 +340,8 @@ export const handleVote = async ({ payload }) => {
 
   const storage = await getStorage(contract, index, blockNum, 5, voter);
 
-  let vote = await Vote.loadEntity(id);
-  if (!vote) {
-    vote = new Vote(id);
-  }
+  const vote: Vote = await getEntity(Vote, id);
+
   vote.voter = voter;
   vote.space = space;
   vote.proposal = proposalId;

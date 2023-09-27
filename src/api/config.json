@@ -52,8 +52,12 @@
       "start": 1,
       "events": [
         {
-          "name": "edit_profile",
-          "fn": "handleEditProfile"
+          "name": "set_profile",
+          "fn": "handleSetProfile"
+        },
+        {
+          "name": "set_statement",
+          "fn": "handleSetStatement"
         }
       ]
     },

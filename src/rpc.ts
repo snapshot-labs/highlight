@@ -13,7 +13,7 @@ const DATABASE_URL = process.env.DATABASE_URL || '';
 
 const adapter = new RedisAdapter({ url: DATABASE_URL });
 export const highlight = new Highlight({ adapter, agents });
-highlight.reset().then(() => console.log('Highlight reset complete'));
+// highlight.reset().then(() => console.log('Highlight reset complete'));
 
 const router = express.Router();
 
