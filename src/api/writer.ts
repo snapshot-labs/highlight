@@ -129,13 +129,14 @@ export const handleAddTopic = async ({ payload }) => {
     }
   }
 
-  let profile = await User.loadEntity(author);
+  const user: User = await getEntity(User, author);
+  const profile: Profile = await getEntity(Profile, author);
 
-  if (!profile) {
-    profile = new User(author);
-  }
-  profile.topic_count += 1;
+  user.profile = author;
+  user.topic_count += 1;
+  profile.user = author;
 
+  await user.save();
   await profile.save();
 };
 
@@ -234,13 +235,14 @@ export const handleTopicVote = async ({ payload }) => {
     await topic.save();
   }
 
-  let profile = await User.loadEntity(voter);
+  const user: User = await getEntity(User, voter);
+  const profile: Profile = await getEntity(Profile, voter);
 
-  if (!profile) {
-    profile = new User(voter);
-  }
-  profile.topic_vote_count += 1;
+  user.profile = voter;
+  user.topic_vote_count += 1;
+  profile.user = voter;
 
+  await user.save();
   await profile.save();
 };
 
@@ -256,13 +258,14 @@ export const handleTopicUnvote = async ({ payload }) => {
     await vote.delete();
   }
 
-  let profile = await User.loadEntity(voter);
+  const user: User = await getEntity(User, voter);
+  const profile: Profile = await getEntity(Profile, voter);
 
-  if (!profile) {
-    profile = new User(voter);
-  }
-  profile.topic_vote_count -= 1;
+  user.profile = voter;
+  user.topic_vote_count -= 1;
+  profile.user = voter;
 
+  await user.save();
   await profile.save();
 };
 
@@ -273,8 +276,8 @@ export const handleSetProfile = async ({ payload }) => {
 
   const [id, metadataUri] = payload.data;
 
-  const user = await getEntity(User, id);
-  const profile = await getEntity(Profile, id);
+  const user: User = await getEntity(User, id);
+  const profile: Profile = await getEntity(Profile, id);
 
   user.profile = id;
   profile.user = id;
@@ -302,8 +305,8 @@ export const handleSetStatement = async ({ payload }) => {
 
   const [id, org, metadataUri] = payload.data;
 
-  const user = await getEntity(User, id);
-  const statement = await getEntity(Statement, `${id}/${org}`);
+  const user: User = await getEntity(User, id);
+  const statement: Statement = await getEntity(Statement, `${id}/${org}`);
 
   statement.user = id;
   statement.org = org;
@@ -337,10 +340,8 @@ export const handleVote = async ({ payload }) => {
 
   const storage = await getStorage(contract, index, blockNum, 5, voter);
 
-  let vote = await Vote.loadEntity(id);
-  if (!vote) {
-    vote = new Vote(id);
-  }
+  const vote: Vote = await getEntity(Vote, id);
+
   vote.voter = voter;
   vote.space = space;
   vote.proposal = proposalId;

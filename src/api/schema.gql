@@ -47,6 +47,7 @@ type Profile {
   about: Text
   twitter: String
   discord: String
+  telegram: String
   github: String
   updated: Int
 }
