@@ -12,6 +12,18 @@ export class HighlightProvider extends BaseProvider {
     return 'highlight';
   }
 
+  async init() {
+    return;
+  }
+
+  async getLatestBlockNumber() {
+    return await highlight.getMci();
+  }
+
+  formatAddresses(addresses: string[]): string[] {
+    return addresses;
+  }
+
   async processBlock(blockNum: number) {
     let block, lastMci;
     try {

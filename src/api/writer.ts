@@ -34,7 +34,7 @@ export const handleAddCategory = async ({ payload }) => {
   await category.save();
 
   if (parent !== 0) {
-    const parentCategory = await Category.loadEntity(category.parent.toString());
+    const parentCategory = await Category.loadEntity(category.parent);
 
     if (parentCategory) {
       parentCategory.category_count += 1;
@@ -76,7 +76,7 @@ export const handleRemoveCategory = async ({ payload }) => {
     const parent = category.parent || 0;
 
     if (parent !== 0) {
-      const parentCategory = await Category.loadEntity(parent.toString());
+      const parentCategory = await Category.loadEntity(parent);
 
       if (parentCategory) {
         parentCategory.category_count -= 1;
