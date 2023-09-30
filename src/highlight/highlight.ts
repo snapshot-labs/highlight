@@ -88,6 +88,10 @@ export default class Highlight {
     return events.filter(event => event !== null);
   }
 
+  async getMci() {
+    return await this.adapter.get('events:id');
+  }
+
   async reset() {
     return await this.adapter.reset();
   }

@@ -15,7 +15,7 @@ if (process.env.CA_CERT) {
 
 // @ts-ignore
 export const checkpoint = new Checkpoint(config, writer, schema, {
-  logLevel: LogLevel.Error,
+  logLevel: LogLevel.Fatal,
   prettifyLogs: process.env.NODE_ENV !== 'production',
   NetworkProvider: HighlightProvider,
   fetchInterval: 5e2,

@@ -34,6 +34,16 @@ router.post('/', async (req, res) => {
       }
     }
 
+    case 'get_mci': {
+      try {
+        const result = await highlight.getMci();
+
+        return rpcSuccess(res, result, id);
+      } catch (e) {
+        return rpcError(res, 500, -32000, e, id);
+      }
+    }
+
     case 'get_events': {
       try {
         const result = await highlight.getEvents(params);
