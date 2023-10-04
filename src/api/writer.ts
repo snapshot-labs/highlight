@@ -334,7 +334,7 @@ export const handleVote = async ({ payload }) => {
   const id = `${space}/${proposalId}/${voter}`;
 
   // Get voting power
-  const contract = '0x2ECE234Efb5c9b3D4c7648Ffc7D185912A56Ce60';
+  const contract = '0xF524a5E0E153506b70994a2e01a890858728Bcd9';
   const index = 0;
   const blockNum = 9552533;
 
