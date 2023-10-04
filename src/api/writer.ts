@@ -336,7 +336,7 @@ export const handleVote = async ({ payload }) => {
   // Get voting power
   const contract = '0xF524a5E0E153506b70994a2e01a890858728Bcd9';
   const index = 0;
-  const blockNum = 9552533;
+  const blockNum = 9808461;
 
   const storage = await getStorage(contract, index, blockNum, 5, voter);
 
