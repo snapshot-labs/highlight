@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import type { Response } from 'express';
 
-export const IPFS_GATEWAY = process.env.IPFS_GATEWAY || 'snapshot.4everland.link';
+export const IPFS_GATEWAY = process.env.IPFS_GATEWAY || 'pineapple.fyi';
 
 export function getUrl(uri, gateway = IPFS_GATEWAY) {
   const ipfsGateway = `https://${gateway}`;

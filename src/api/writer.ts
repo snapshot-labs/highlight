@@ -95,7 +95,7 @@ export const handleAddTopic = async ({ payload }) => {
   const [id, author, categoryId, parent, metadataUri] = payload.data;
 
   const topic = new Topic(id);
-  topic.category = categoryId;
+  if (categoryId) topic.category = categoryId;
   topic.author = author;
   topic.parent = parent;
   topic.metadata_uri = metadataUri;
@@ -207,29 +207,31 @@ export const handleTopicVote = async ({ payload }) => {
   const [voter, topicId, choice] = payload.data;
   const id = `${voter}/${topicId}`;
   let newVote = false;
-  let previousVoteChoice;
+  let previousVoteScore;
 
   let vote = await TopicVote.loadEntity(id);
   if (!vote) {
     vote = new TopicVote(id);
     newVote = true;
   } else {
-    previousVoteChoice = vote.choice;
+    previousVoteScore = vote.choice === 0 ? -1 : 1;
   }
   vote.voter = voter;
   vote.topic = topicId;
   vote.choice = choice;
+
+  const score = choice === 0 ? -1 : 1;
 
   await vote.save();
 
   const topic = await Topic.loadEntity(topicId);
 
   if (topic) {
-    topic.score += choice;
+    topic.score += score;
     if (newVote) {
       topic.vote_count += 1;
     } else {
-      topic.score -= previousVoteChoice;
+      topic.score -= previousVoteScore;
     }
 
     await topic.save();
