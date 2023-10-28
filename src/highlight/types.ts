@@ -5,21 +5,14 @@ export interface PostJointRequest {
 export interface Unit {
   unit_hash: string;
   version: string;
-  signature: string;
   sender_address: string;
   messages: Message[];
   timestamp: number;
 }
 
 export interface Message {
-  type: 'INVOKE_FUNCTION' | 'DEPLOY';
-  payload: InvokeRequest;
-}
-
-export interface InvokeRequest {
-  agent: string;
-  method: string;
-  args: Array<any>;
+  to: string;
+  data: string;
 }
 
 export interface GetEventsRequest {

@@ -1,16 +1,14 @@
-import { BigNumberish, ec, hash, selector } from 'starknet';
 import Agent from './agent';
 import Process from './process';
-import type { InvokeRequest, GetEventsRequest, PostJointRequest } from './types';
+import type { GetEventsRequest, PostJointRequest, Message } from './types';
 import type { Adapter } from './adapter/adapter';
 
-const RELAYER_PUBLIC_KEY = process.env.RELAYER_PUBLIC_KEY || '';
-
+type AgentGetter = (process: Process) => Agent;
 export default class Highlight {
   private adapter: Adapter;
-  public agents: Record<string, Agent>;
+  public agents: Record<string, AgentGetter>;
 
-  constructor({ adapter, agents }) {
+  constructor({ adapter, agents }: { adapter: Adapter; agents: Record<string, AgentGetter> }) {
     this.adapter = adapter;
     this.agents = agents;
   }
@@ -20,19 +18,6 @@ export default class Highlight {
     delete unitRaw.unit_hash;
     delete unitRaw.signature;
 
-    const data: BigNumberish[] = [selector.starknetKeccak(JSON.stringify(unitRaw))];
-    const unitHash = hash.computeHashOnElements(data);
-
-    const isValidSignature = ec.starkCurve.verify(
-      params.unit.signature,
-      unitHash,
-      RELAYER_PUBLIC_KEY
-    );
-
-    if (!isValidSignature) {
-      return Promise.reject('wrong signature');
-    }
-
     let execution;
     let steps = 0;
 
@@ -41,9 +26,7 @@ export default class Highlight {
 
       try {
         for (const message of params.unit.messages) {
-          if (message.type === 'INVOKE_FUNCTION') {
-            await this.invoke(process, message.payload);
-          }
+          await this.invoke(process, message);
         }
 
         execution = await process.execute();
@@ -72,11 +55,11 @@ export default class Highlight {
     };
   }
 
-  async invoke(process: Process, params: InvokeRequest) {
-    // @ts-ignore
-    const agent = new this.agents[params.agent](params.agent, process);
+  async invoke(process: Process, message: Message) {
+    const getAgent = this.agents[message.to.toLowerCase()];
+    const agent = getAgent(process);
 
-    return await agent[params.method](...params.args);
+    return agent.invoke(message.data);
   }
 
   async getEvents(params: GetEventsRequest) {

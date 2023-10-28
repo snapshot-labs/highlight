@@ -1,22 +1,20 @@
 import express from 'express';
-import { BigNumberish, ec, hash, selector } from 'starknet';
+import { BigNumberish, hash, selector } from 'starknet';
 import { keccak256 } from '@ethersproject/keccak256';
 import { parse as parseTransaction, recoverAddress, serialize } from '@ethersproject/transactions';
-import * as weierstrass from '@noble/curves/abstract/weierstrass';
 import Highlight from './highlight/highlight';
 import { RedisAdapter } from './highlight/adapter/redis';
-import agents from './agents';
+import { AGENTS_MAP } from './agents';
 import { lastIndexedMci } from './api/provider';
 import { rpcSuccess, rpcError, sleep } from './utils';
+import { Message } from './highlight/types';
 
-const RELAYER_PRIVATE_KEY = process.env.RELAYER_PRIVATE_KEY || '0x1234567890987654321';
-const RELAYER_PUBLIC_KEY = process.env.RELAYER_PUBLIC_KEY || '0x1234567890987654321';
 const DATABASE_URL = process.env.DATABASE_URL || '';
 
 const LAST_BLOCK_NUMBER = '0x1';
 
 const adapter = new RedisAdapter({ url: DATABASE_URL });
-export const highlight = new Highlight({ adapter, agents });
+export const highlight = new Highlight({ adapter, agents: AGENTS_MAP });
 // highlight.reset().then(() => console.log('Highlight reset complete'));
 
 const router = express.Router();
@@ -100,7 +98,13 @@ router.post('/', async (req, res) => {
       const [rawTransaction] = params;
 
       const tx = parseTransaction(rawTransaction);
-      if (!tx.hash || tx.r === undefined || tx.s === undefined || tx.v === undefined) {
+      if (
+        !tx.hash ||
+        tx.to === undefined ||
+        tx.r === undefined ||
+        tx.s === undefined ||
+        tx.v === undefined
+      ) {
         return rpcError(res, 500, -32003, 'invalid transaction', id);
       }
 
@@ -127,7 +131,21 @@ router.post('/', async (req, res) => {
         return rpcError(res, 500, -32003, 'invalid transaction', id);
       }
 
-      return rpcSuccess(res, '0x0', id);
+      const messages: Message[] = [{ to: tx.to, data: tx.data }];
+      const joint = rollJoint(messages, tx.from);
+
+      try {
+        const result = await highlight.postJoint(joint);
+
+        while ((result?.last_event_id as number) > lastIndexedMci) {
+          await sleep(1e2);
+        }
+
+        return rpcSuccess(res, tx.hash, id);
+      } catch (e) {
+        console.log(e);
+        return rpcError(res, 500, -32000, e, id);
+      }
     }
 
     default: {
@@ -136,41 +154,25 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.post('/relayer', async (req, res) => {
-  const { body } = req;
-
+function rollJoint(messages: Message[], from: string) {
   const joint = {
     unit: {
       unit_hash: '',
       version: '0x1',
-      messages: body.params.messages,
+      messages,
       timestamp: ~~(Date.now() / 1e3),
-      sender_address: RELAYER_PUBLIC_KEY,
-      signature: ''
+      sender_address: from
     }
   };
   const unitRaw: any = structuredClone(joint.unit);
   delete unitRaw.unit_hash;
-  delete unitRaw.signature;
 
   const data: BigNumberish[] = [selector.starknetKeccak(JSON.stringify(unitRaw))];
   const unitHash = hash.computeHashOnElements(data);
-  const signature: weierstrass.SignatureType = ec.starkCurve.sign(unitHash, RELAYER_PRIVATE_KEY);
 
   joint.unit.unit_hash = unitHash;
-  joint.unit.signature = signature.toCompactHex();
 
-  try {
-    const result = await highlight.postJoint(joint);
-
-    while ((result?.last_event_id as number) > lastIndexedMci) {
-      await sleep(1e2);
-    }
-
-    return rpcSuccess(res, result, body.id);
-  } catch (e) {
-    return rpcError(res, 500, -32000, e, body.id);
-  }
-});
+  return joint;
+}
 
 export default router;
