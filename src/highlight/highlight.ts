@@ -74,8 +74,6 @@ export default class Highlight {
     const unitId = await this.adapter.get(`units_map:${params.hash}`);
     const events = await this.adapter.get(`unit_events:${unitId}`);
 
-    console.log('unitId', params.hash, unitId, events);
-
     return {
       events: events.filter(event => event !== null)
     };
