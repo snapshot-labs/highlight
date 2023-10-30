@@ -1,6 +1,6 @@
 import Agent from './agent';
 import Process from './process';
-import type { GetEventsRequest, PostJointRequest } from './types';
+import type { GetEventsRequest, GetUnitReceiptRequest, PostJointRequest } from './types';
 import type { Adapter } from './adapter/adapter';
 
 type AgentGetter = (process: Process) => Agent;
@@ -39,6 +39,8 @@ export default class Highlight {
     id++;
     const multi = this.adapter.multi();
     multi.set(`unit:${id}`, params.unit);
+    multi.set(`unit_events:${id}`, execution.events || []);
+    multi.set(`units_map:${params.unit.unit_hash}`, id);
     multi.set('units:id', id);
 
     await multi.exec();
@@ -66,6 +68,17 @@ export default class Highlight {
     const events = await this.adapter.mget(keys);
 
     return events.filter(event => event !== null);
+  }
+
+  async getUnitReceipt(params: GetUnitReceiptRequest) {
+    const unitId = await this.adapter.get(`units_map:${params.hash}`);
+    const events = await this.adapter.get(`unit_events:${unitId}`);
+
+    console.log('unitId', params.hash, unitId, events);
+
+    return {
+      events: events.filter(event => event !== null)
+    };
   }
 
   async getMci() {

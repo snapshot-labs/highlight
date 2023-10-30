@@ -31,6 +31,10 @@ export interface GetEventsRequest {
   end: number;
 }
 
+export interface GetUnitReceiptRequest {
+  hash: string;
+}
+
 export interface Storage {
   agent: string;
   key: string;

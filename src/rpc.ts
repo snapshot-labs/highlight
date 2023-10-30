@@ -54,6 +54,17 @@ router.post('/', async (req, res) => {
       }
     }
 
+    case 'get_unit_receipt': {
+      try {
+        const result = await highlight.getUnitReceipt(params);
+
+        return rpcSuccess(res, result, id);
+      } catch (e) {
+        console.log('e', e);
+        return rpcError(res, 500, -32000, e, id);
+      }
+    }
+
     // ETH RPC
     case 'eth_getBlockByNumber': {
       return rpcSuccess(
