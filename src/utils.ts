@@ -1,7 +1,22 @@
 import fetch from 'node-fetch';
-import type { Response } from 'express';
+import { serialize } from '@ethersproject/transactions';
+import { keccak256 } from '@ethersproject/keccak256';
+import { Response } from 'express';
+import { Unit } from './highlight/types';
 
 export const IPFS_GATEWAY = process.env.IPFS_GATEWAY || 'pineapple.fyi';
+
+/**
+ * Computes hash for unit. Hash of unit is exclusively dependent on txData and signature
+ * so it's compatible with Ethers.js provider (submitted txId and returned txId needs to be the same)
+ * @param unit Unit
+ * @returns Unit hash
+ */
+export function computeUnitHash(unit: Unit) {
+  const serializedTx = serialize(unit.txData, unit.signature);
+
+  return keccak256(serializedTx);
+}
 
 export function getUrl(uri, gateway = IPFS_GATEWAY) {
   const ipfsGateway = `https://${gateway}`;

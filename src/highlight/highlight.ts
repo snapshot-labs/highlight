@@ -1,6 +1,6 @@
 import Agent from './agent';
 import Process from './process';
-import type { GetEventsRequest, PostJointRequest, Message } from './types';
+import type { GetEventsRequest, PostJointRequest } from './types';
 import type { Adapter } from './adapter/adapter';
 
 type AgentGetter = (process: Process) => Agent;
@@ -21,13 +21,10 @@ export default class Highlight {
     let execution;
     let steps = 0;
 
-    if (params.unit.messages.length > 0) {
+    if (params.unit.txData.to) {
       const process = new Process({ adapter: this.adapter });
-
       try {
-        for (const message of params.unit.messages) {
-          await this.invoke(process, message);
-        }
+        await this.invoke(process, params.unit.txData.to, params.unit.txData.data);
 
         execution = await process.execute();
         steps = process.steps;
@@ -55,11 +52,11 @@ export default class Highlight {
     };
   }
 
-  async invoke(process: Process, message: Message) {
-    const getAgent = this.agents[message.to.toLowerCase()];
+  async invoke(process: Process, to: string, data: string) {
+    const getAgent = this.agents[to.toLowerCase()];
     const agent = getAgent(process);
 
-    return agent.invoke(message.data);
+    return agent.invoke(data);
   }
 
   async getEvents(params: GetEventsRequest) {

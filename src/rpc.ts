@@ -1,13 +1,11 @@
 import express from 'express';
-import { BigNumberish, hash, selector } from 'starknet';
 import { keccak256 } from '@ethersproject/keccak256';
 import { parse as parseTransaction, recoverAddress, serialize } from '@ethersproject/transactions';
 import Highlight from './highlight/highlight';
 import { RedisAdapter } from './highlight/adapter/redis';
 import { AGENTS_MAP } from './agents';
 import { lastIndexedMci } from './api/provider';
-import { rpcSuccess, rpcError, sleep } from './utils';
-import { Message } from './highlight/types';
+import { rpcSuccess, rpcError, sleep, computeUnitHash } from './utils';
 
 const DATABASE_URL = process.env.DATABASE_URL || '';
 
@@ -108,7 +106,7 @@ router.post('/', async (req, res) => {
         return rpcError(res, 500, -32003, 'invalid transaction', id);
       }
 
-      const eip1559TxData = {
+      const txData = {
         type: tx.type,
         chainId: tx.chainId,
         nonce: tx.nonce,
@@ -119,29 +117,37 @@ router.post('/', async (req, res) => {
         value: tx.value,
         data: tx.data
       };
-
-      const serializedTx = serialize(eip1559TxData);
-      const recoveredAddress = recoverAddress(keccak256(serializedTx), {
+      const signature = {
         r: tx.r,
         s: tx.s,
         v: tx.v
-      });
+      };
+
+      const serializedTx = serialize(txData);
+      const recoveredAddress = recoverAddress(keccak256(serializedTx), signature);
 
       if (recoveredAddress !== tx.from) {
         return rpcError(res, 500, -32003, 'invalid transaction', id);
       }
 
-      const messages: Message[] = [{ to: tx.to, data: tx.data }];
-      const joint = rollJoint(messages, tx.from);
-
       try {
-        const result = await highlight.postJoint(joint);
+        const unit = {
+          unit_hash: '',
+          version: '0x1',
+          timestamp: ~~(Date.now() / 1e3),
+          sender_address: tx.from,
+          txData,
+          signature
+        };
+        unit.unit_hash = computeUnitHash(unit);
+
+        const result = await highlight.postJoint({ unit });
 
         while ((result?.last_event_id as number) > lastIndexedMci) {
           await sleep(1e2);
         }
 
-        return rpcSuccess(res, tx.hash, id);
+        return rpcSuccess(res, result.joint.unit.unit_hash, id);
       } catch (e) {
         console.log(e);
         return rpcError(res, 500, -32000, e, id);
@@ -153,26 +159,5 @@ router.post('/', async (req, res) => {
     }
   }
 });
-
-function rollJoint(messages: Message[], from: string) {
-  const joint = {
-    unit: {
-      unit_hash: '',
-      version: '0x1',
-      messages,
-      timestamp: ~~(Date.now() / 1e3),
-      sender_address: from
-    }
-  };
-  const unitRaw: any = structuredClone(joint.unit);
-  delete unitRaw.unit_hash;
-
-  const data: BigNumberish[] = [selector.starknetKeccak(JSON.stringify(unitRaw))];
-  const unitHash = hash.computeHashOnElements(data);
-
-  joint.unit.unit_hash = unitHash;
-
-  return joint;
-}
 
 export default router;
