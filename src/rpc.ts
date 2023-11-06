@@ -21,7 +21,7 @@ router.post('/', async (req, res) => {
   const { id, params, method } = req.body;
 
   switch (method) {
-    case 'get_mci': {
+    case 'hl_getMci': {
       try {
         const result = await highlight.getMci();
 
@@ -31,7 +31,7 @@ router.post('/', async (req, res) => {
       }
     }
 
-    case 'get_events': {
+    case 'hl_getEvents': {
       try {
         const result = await highlight.getEvents(params);
 
@@ -41,7 +41,7 @@ router.post('/', async (req, res) => {
       }
     }
 
-    case 'get_unit_receipt': {
+    case 'hl_getUnitReceipt': {
       try {
         const result = await highlight.getUnitReceipt(params);
 
