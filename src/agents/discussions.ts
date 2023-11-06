@@ -2,6 +2,8 @@ import Agent from '../highlight/agent';
 
 export default class Discussions extends Agent {
   async add_category(parent: number, metadataURI: string) {
+    console.log('add_category', parent, metadataURI);
+
     const id = (await this.get('next_category_id')) || 1;
 
     this.assert(parent !== 0 && !(await this.has(`category.${parent}`)), 'invalid category');
