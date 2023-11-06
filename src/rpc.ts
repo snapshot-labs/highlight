@@ -21,19 +21,6 @@ router.post('/', async (req, res) => {
   const { id, params, method } = req.body;
 
   switch (method) {
-    case 'post_joint': {
-      console.log('New joint');
-
-      try {
-        const result = await highlight.postJoint(params);
-
-        return rpcSuccess(res, result, id);
-      } catch (e) {
-        console.log(e);
-        return rpcError(res, 500, -32000, e, id);
-      }
-    }
-
     case 'get_mci': {
       try {
         const result = await highlight.getMci();
