@@ -38,6 +38,7 @@ export default class Highlight {
 
     id++;
     const multi = this.adapter.multi();
+    multi.incr(`sender_txs_count:${params.unit.sender_address}`);
     multi.set(`unit:${id}`, params.unit);
     multi.set(`unit_events:${id}`, execution.events || []);
     multi.set(`units_map:${params.unit.unit_hash}`, id);

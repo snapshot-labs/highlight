@@ -1,4 +1,5 @@
 import express from 'express';
+import { getAddress } from '@ethersproject/address';
 import { keccak256 } from '@ethersproject/keccak256';
 import { parse as parseTransaction, recoverAddress, serialize } from '@ethersproject/transactions';
 import Highlight from './highlight/highlight';
@@ -75,7 +76,10 @@ router.post('/', async (req, res) => {
     }
 
     case 'eth_getTransactionCount': {
-      return rpcSuccess(res, '0x0', id);
+      const address = getAddress(params[0]);
+      const count = (await adapter.get(`sender_txs_count:${address}`)) || 0;
+
+      return rpcSuccess(res, `0x${count.toString(16)}`, id);
     }
 
     case 'eth_gasPrice': {
@@ -102,6 +106,17 @@ router.post('/', async (req, res) => {
         tx.v === undefined
       ) {
         return rpcError(res, 500, -32003, 'invalid transaction', id);
+      }
+
+      const count = (await adapter.get(`sender_txs_count:${tx.from}`)) || 0;
+      if (tx.nonce !== count) {
+        return rpcError(
+          res,
+          500,
+          -32000,
+          `the tx doesn't have the correct nonce. account has nonce of: ${count} tx has nonce of: ${tx.nonce}`,
+          id
+        );
       }
 
       const txData = {

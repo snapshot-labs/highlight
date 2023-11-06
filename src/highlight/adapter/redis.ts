@@ -3,7 +3,7 @@ import { Adapter, Multi } from './adapter';
 
 class RedisMulti extends Multi {
   private client: RedisClientType;
-  private multi: any;
+  private multi: ReturnType<RedisClientType['multi']>;
 
   constructor({ client }) {
     super();
@@ -17,6 +17,10 @@ class RedisMulti extends Multi {
 
   del(key: string) {
     this.multi.del(key);
+  }
+
+  incr(key: string) {
+    this.multi.incr(key);
   }
 
   async exec() {
@@ -65,6 +69,10 @@ export class RedisAdapter extends Adapter {
 
   async del(key: string) {
     await this.client.del[key];
+  }
+
+  async incr(key: string) {
+    await this.client.incr(key);
   }
 
   async reset() {
