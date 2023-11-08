@@ -1,0 +1,3 @@
+[
+  "function vote(string space, string voter, uint64 proposalId, uint64 choice, uint64 chainId, string sig)"
+]

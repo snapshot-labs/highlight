@@ -4,6 +4,7 @@ import Votes from './votes';
 import Process from '../highlight/process';
 import ProfilesAbi from './abis/profiles.json';
 import DiscussionsAbi from './abis/discussions.json';
+import VotesAbi from './abis/votes.json';
 
 export const AGENTS_MAP = {
   '0x0000000000000000000000000000000000000001': (process: Process) => {
@@ -13,6 +14,6 @@ export const AGENTS_MAP = {
     return new Discussions('discussions', process, DiscussionsAbi);
   },
   '0x0000000000000000000000000000000000000003': (process: Process) => {
-    return new Votes('votes', process, []);
+    return new Votes('votes', process, VotesAbi);
   }
 };
