@@ -1,6 +1,12 @@
 {
   "network_node_url": "http://localhost:3001",
   "disable_checkpoints": true,
+  "decimal_types": {
+    "BigDecimalVP": {
+      "p": 60,
+      "d": 0
+    }
+  },
   "sources": [
     {
       "contract": "discussions",
