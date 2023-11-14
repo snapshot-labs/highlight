@@ -1,4 +1,3 @@
-import { formatUnits } from '@ethersproject/units';
 import {
   Category,
   Topic,
@@ -6,6 +5,9 @@ import {
   User,
   Profile,
   Statement,
+  SXProposal,
+  SXSpace,
+  SXUser,
   Vote
 } from '../../.checkpoint/models';
 import { getJSON } from '../utils';
@@ -333,7 +335,9 @@ export const handleVote = async ({ payload }) => {
   console.log('Handle vote', payload);
 
   const [space, voter, proposalId, choice, chainId, sig] = payload.data;
-  const id = `${space}/${proposalId}/${voter}`;
+  const uniqueProposalId = `${space}/${proposalId}`;
+  const id = `${uniqueProposalId}/${voter}`;
+  const timestamp = ~~(Date.now() / 1e3); // @TODO change to unit timestamp
 
   // Get voting power
   const contract = '0xF524a5E0E153506b70994a2e01a890858728Bcd9';
@@ -342,17 +346,28 @@ export const handleVote = async ({ payload }) => {
 
   const storage = await getStorage(contract, index, blockNum, 5, voter);
 
+  const userEntity: SXUser = await getEntity(SXUser, voter);
+  const spaceEntity: SXSpace = await getEntity(SXSpace, space);
+  const proposalEntity: SXProposal = await getEntity(SXProposal, uniqueProposalId);
   const vote: Vote = await getEntity(Vote, id);
+
+  userEntity.vote_count += 1;
+  userEntity.created = timestamp;
+  spaceEntity.vote_count += 1;
+  proposalEntity.vote_count += 1;
+  proposalEntity.scores_total = (BigInt(proposalEntity.scores_total) + BigInt(storage)).toString();
+  proposalEntity[`scores_${choice}`] = (
+    BigInt(proposalEntity[`scores_${choice}`]) + BigInt(storage)
+  ).toString();
 
   vote.voter = voter;
   vote.space = space;
   vote.proposal = proposalId;
   vote.choice = choice;
-  vote.vp = parseFloat(formatUnits(storage, 18));
-  vote.vp_raw = storage;
-  vote.created = ~~(Date.now() / 1e3); // @TODO change to unit timestamp
+  vote.vp = storage;
+  vote.created = timestamp;
   vote.chain_id = chainId;
   vote.sig = sig;
 
-  await vote.save();
+  await Promise.all([userEntity.save(), spaceEntity.save(), proposalEntity.save(), vote.save()]);
 };

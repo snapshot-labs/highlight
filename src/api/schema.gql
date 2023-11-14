@@ -1,5 +1,6 @@
 scalar Id
 scalar Text
+scalar BigDecimalVP
 
 type Category {
   id: Int!
@@ -61,15 +62,36 @@ type Statement {
   updated: Int
 }
 
-type Vote { # rename to vote
+type SXUser {
   id: String!
-  voter: String # User entity in sx-api
-  space: String # Space entity in sx-api
-  proposal: Int
-  choice: Int
-  vp: Float
-  vp_raw: String # not part of sx-api
-  created: Int
+  proposal_count: Int!
+  vote_count: Int!
+  created: Int!
+}
+
+type SXSpace {
+  id: String!
+  vote_count: Int!
+}
+
+type SXProposal {
+  id: String!
+  scores_1: BigDecimalVP!
+  scores_2: BigDecimalVP!
+  scores_3: BigDecimalVP!
+  scores_total: BigDecimalVP!
+  vote_count: Int!
+}
+
+type Vote {
+  id: String!
+  voter: SXUser!
+  space: SXSpace!
+  proposal: Int!
+  choice: Int!
+  vp: BigDecimalVP!
+  created: Int!
+  tx: String!
   chain_id: Int # not part of sx-api
   sig: Text # not part of sx-api
 }
