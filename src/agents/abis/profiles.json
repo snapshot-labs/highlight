@@ -1,0 +1,4 @@
+[
+  "function setProfile(string user, string metadataURI)",
+  "function setStatement(string user, string org, string metadataURI)"
+]

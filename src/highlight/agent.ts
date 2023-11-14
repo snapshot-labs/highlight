@@ -1,12 +1,31 @@
+import { Interface } from '@ethersproject/abi';
+import * as changeCase from 'change-case';
 import Process from './process';
 
 export default class Agent {
   public id: string;
   public process: Process;
+  public iface: Interface;
 
-  constructor(id: string, process: Process) {
+  constructor(id: string, process: Process, fragments: ConstructorParameters<typeof Interface>[0]) {
     this.id = id;
     this.process = process;
+    this.iface = new Interface(fragments);
+  }
+
+  invoke(data: string) {
+    const parsed = this.iface.parseTransaction({ data });
+
+    const handlerName = changeCase.snakeCase(parsed.name);
+    const parsedArgs = parsed.args.map(arg => {
+      if (arg._isBigNumber) {
+        return arg.toNumber();
+      }
+
+      return arg;
+    });
+
+    return this[handlerName](...parsedArgs);
   }
 
   assert(condition, e) {

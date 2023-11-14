@@ -9,6 +9,10 @@ export class Multi {
     throw new Error('del method was not defined');
   }
 
+  incr(key: string) {
+    throw new Error('incr method was not defined');
+  }
+
   async exec(): Promise<void> {
     throw new Error('exec method was not defined');
   }
@@ -29,6 +33,10 @@ export class Adapter {
 
   async del(key: string): Promise<void> {
     throw new Error('del method was not defined');
+  }
+
+  async incr(key: string): Promise<void> {
+    throw new Error('incr method was not defined');
   }
 
   async reset(): Promise<void> {

@@ -1,16 +1,14 @@
-import { BigNumberish, ec, hash, selector } from 'starknet';
 import Agent from './agent';
 import Process from './process';
-import type { InvokeRequest, GetEventsRequest, PostJointRequest } from './types';
+import type { GetEventsRequest, GetUnitReceiptRequest, PostJointRequest } from './types';
 import type { Adapter } from './adapter/adapter';
 
-const RELAYER_PUBLIC_KEY = process.env.RELAYER_PUBLIC_KEY || '';
-
+type AgentGetter = (process: Process) => Agent;
 export default class Highlight {
   private adapter: Adapter;
-  public agents: Record<string, Agent>;
+  public agents: Record<string, AgentGetter>;
 
-  constructor({ adapter, agents }) {
+  constructor({ adapter, agents }: { adapter: Adapter; agents: Record<string, AgentGetter> }) {
     this.adapter = adapter;
     this.agents = agents;
   }
@@ -20,31 +18,13 @@ export default class Highlight {
     delete unitRaw.unit_hash;
     delete unitRaw.signature;
 
-    const data: BigNumberish[] = [selector.starknetKeccak(JSON.stringify(unitRaw))];
-    const unitHash = hash.computeHashOnElements(data);
-
-    const isValidSignature = ec.starkCurve.verify(
-      params.unit.signature,
-      unitHash,
-      RELAYER_PUBLIC_KEY
-    );
-
-    if (!isValidSignature) {
-      return Promise.reject('wrong signature');
-    }
-
     let execution;
     let steps = 0;
 
-    if (params.unit.messages.length > 0) {
+    if (params.unit.txData.to) {
       const process = new Process({ adapter: this.adapter });
-
       try {
-        for (const message of params.unit.messages) {
-          if (message.type === 'INVOKE_FUNCTION') {
-            await this.invoke(process, message.payload);
-          }
-        }
+        await this.invoke(process, params.unit.txData.to, params.unit.txData.data);
 
         execution = await process.execute();
         steps = process.steps;
@@ -58,7 +38,10 @@ export default class Highlight {
 
     id++;
     const multi = this.adapter.multi();
+    multi.incr(`sender_txs_count:${params.unit.sender_address}`);
     multi.set(`unit:${id}`, params.unit);
+    multi.set(`unit_events:${id}`, execution.events || []);
+    multi.set(`units_map:${params.unit.unit_hash}`, id);
     multi.set('units:id', id);
 
     await multi.exec();
@@ -72,11 +55,11 @@ export default class Highlight {
     };
   }
 
-  async invoke(process: Process, params: InvokeRequest) {
-    // @ts-ignore
-    const agent = new this.agents[params.agent](params.agent, process);
+  async invoke(process: Process, to: string, data: string) {
+    const getAgent = this.agents[to.toLowerCase()];
+    const agent = getAgent(process);
 
-    return await agent[params.method](...params.args);
+    return agent.invoke(data);
   }
 
   async getEvents(params: GetEventsRequest) {
@@ -86,6 +69,15 @@ export default class Highlight {
     const events = await this.adapter.mget(keys);
 
     return events.filter(event => event !== null);
+  }
+
+  async getUnitReceipt(params: GetUnitReceiptRequest) {
+    const unitId = await this.adapter.get(`units_map:${params.hash}`);
+    const events = await this.adapter.get(`unit_events:${unitId}`);
+
+    return {
+      events: events.filter(event => event !== null)
+    };
   }
 
   async getMci() {

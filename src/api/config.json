@@ -1,5 +1,6 @@
 {
   "network_node_url": "http://localhost:3001",
+  "disable_checkpoints": true,
   "sources": [
     {
       "contract": "discussions",
