@@ -1,11 +1,14 @@
+import AsyncLock from 'async-lock';
 import Agent from './agent';
 import Process from './process';
 import type { GetEventsRequest, GetUnitReceiptRequest, PostJointRequest } from './types';
 import type { Adapter } from './adapter/adapter';
 
 type AgentGetter = (process: Process) => Agent;
+
 export default class Highlight {
   private adapter: Adapter;
+  private asyncLock = new AsyncLock();
   public agents: Record<string, AgentGetter>;
 
   constructor({ adapter, agents }: { adapter: Adapter; agents: Record<string, AgentGetter> }) {
@@ -13,7 +16,11 @@ export default class Highlight {
     this.agents = agents;
   }
 
-  async postJoint(params: PostJointRequest) {
+  postJoint(params: PostJointRequest) {
+    return this.asyncLock.acquire('postJoint', () => this._postJoint(params));
+  }
+
+  async _postJoint(params: PostJointRequest) {
     const unitRaw: any = structuredClone(params.unit);
     delete unitRaw.unit_hash;
     delete unitRaw.signature;
