@@ -18,20 +18,6 @@ export default class Process {
     this.events.push(event);
   }
 
-  createEntity(agent: string, type: string, id: string | number) {
-    this.write({ agent, key: `owner.${type}.${id}`, value: this.from });
-    this.emit({
-      agent,
-      key: type,
-      data: [id.toString(), this.from]
-    });
-  }
-
-  async hasPermissionOnEntity(agent: string, type: string, id: string | number) {
-    const owner = await this.get(agent, `owner.${type}.${id}`);
-    return owner === this.from;
-  }
-
   async get(agent: string, key: string) {
     const storage = this.state[`${agent}:${key}`];
     if (storage) return storage;
