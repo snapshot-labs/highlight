@@ -12,10 +12,14 @@ export default class Discussions extends Agent {
     this.write('next_category_id', id + 1);
 
     this.emit('add_category', [id, parent, metadataURI]);
+
+    this.createEntity('category', id);
   }
 
   async edit_category(category: number, metadataURI: string) {
     console.log('edit_category', category, metadataURI);
+
+    this.assert(!(await this.hasPermissionOnEntity('category', category)), 'no permission');
 
     this.emit('edit_category', [category, metadataURI]);
   }
@@ -24,6 +28,7 @@ export default class Discussions extends Agent {
     console.log('remove_category', category);
 
     this.assert(!(await this.has(`category.${category}`)), 'invalid category');
+    this.assert(!(await this.hasPermissionOnEntity('category', category)), 'no permission');
 
     this.delete(`category.${category}`);
 
@@ -42,12 +47,15 @@ export default class Discussions extends Agent {
     this.write('next_topic_id', id + 1);
 
     this.emit('add_topic', [id, author, category, parent, metadataURI]);
+
+    this.createEntity('topic', id);
   }
 
   async edit_topic(topic: number, metadataURI: string) {
     console.log('edit_topic', topic, metadataURI);
 
     this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
+    this.assert(!(await this.hasPermissionOnEntity('topic', topic)), 'no permission');
 
     this.emit('edit_topic', [topic, metadataURI]);
   }
@@ -56,6 +64,7 @@ export default class Discussions extends Agent {
     console.log('remove_topic', topic);
 
     this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
+    this.assert(!(await this.hasPermissionOnEntity('topic', topic)), 'no permission');
 
     this.delete(`topic.${topic}`);
 
@@ -65,7 +74,8 @@ export default class Discussions extends Agent {
   async pin_topic(topic: number) {
     console.log('pin_topic', topic);
 
-    await this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
+    this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
+    this.assert(!(await this.hasPermissionOnEntity('topic', topic)), 'no permission');
 
     this.emit('pin_topic', [topic]);
   }
@@ -74,6 +84,7 @@ export default class Discussions extends Agent {
     console.log('unpin_topic', topic);
 
     this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
+    this.assert(!(await this.hasPermissionOnEntity('topic', topic)), 'no permission');
 
     this.emit('unpin_topic', [topic]);
   }
@@ -85,6 +96,8 @@ export default class Discussions extends Agent {
     this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
 
     this.emit('vote', [voter, topic, choice]);
+
+    this.createEntity('vote', voter);
   }
 
   async unvote(voter: string, topic: number) {
@@ -92,6 +105,7 @@ export default class Discussions extends Agent {
 
     this.assert(!voter, 'invalid voter');
     this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
+    this.assert(!(await this.hasPermissionOnEntity('vote', voter)), 'no permission');
 
     this.emit('unvote', [voter, topic]);
   }

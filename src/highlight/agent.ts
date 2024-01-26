@@ -40,6 +40,14 @@ export default class Agent {
     return await this.process.get(this.id, key);
   }
 
+  createEntity(type: string, id: string | number) {
+    return this.process.createEntity(this.id, type, id);
+  }
+
+  hasPermissionOnEntity(type: string, id: string | number) {
+    return this.process.hasPermissionOnEntity(this.id, type, id);
+  }
+
   write(key: string, value: any) {
     this.process.write({
       agent: this.id,

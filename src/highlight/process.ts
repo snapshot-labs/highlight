@@ -7,13 +7,29 @@ export default class Process {
   public writes: Storage[] = [];
   public state: Record<string, Record<string, string>> = {};
   public steps = 0;
+  public from: string;
 
-  constructor({ adapter }) {
+  constructor({ adapter, from }) {
     this.adapter = adapter;
+    this.from = from;
   }
 
   emit(event: Event) {
     this.events.push(event);
+  }
+
+  createEntity(agent: string, type: string, id: string | number) {
+    this.write({ agent, key: `owner.${type}.${id}`, value: this.from });
+    this.emit({
+      agent,
+      key: type,
+      data: [id.toString(), this.from]
+    });
+  }
+
+  async hasPermissionOnEntity(agent: string, type: string, id: string | number) {
+    const owner = await this.get(agent, `owner.${type}.${id}`);
+    return owner === this.from;
   }
 
   async get(agent: string, key: string) {

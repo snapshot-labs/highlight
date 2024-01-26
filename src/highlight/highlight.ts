@@ -29,7 +29,7 @@ export default class Highlight {
     let steps = 0;
 
     if (params.unit.txData.to) {
-      const process = new Process({ adapter: this.adapter });
+      const process = new Process({ adapter: this.adapter, from: params.unit.sender_address });
       try {
         await this.invoke(process, params.unit.txData.to, params.unit.txData.data);
 
