@@ -9,9 +9,8 @@ export default class Discussions extends Agent {
 
     this.assert(parent !== 0 && !(await this.has(`category.${parent}`)), 'invalid category');
 
-    this.write(`category.${id}`, true);
+    this.write(`category.${id}`, this.process.sender);
     this.write('next_category_id', id + 1);
-    this.write(`owner.category.${id}`, this.process.sender);
 
     this.emit('add_category', [id, parent, metadataURI]);
   }
@@ -19,7 +18,7 @@ export default class Discussions extends Agent {
   async edit_category(category: number, metadataURI: string) {
     console.log('edit_category', category, metadataURI);
 
-    await this.authenticate(this.process.sender, await this.get(`owner.category.${category}`));
+    await this.authenticate(this.process.sender, await this.get(`category.${category}`));
 
     this.emit('edit_category', [category, metadataURI]);
   }
@@ -28,10 +27,9 @@ export default class Discussions extends Agent {
     console.log('remove_category', category);
 
     this.assert(!(await this.has(`category.${category}`)), 'invalid category');
-    await this.authenticate(this.process.sender, await this.get(`owner.category.${category}`));
+    await this.authenticate(this.process.sender, await this.get(`category.${category}`));
 
     this.delete(`category.${category}`);
-    this.delete(`owner.category.${category}`);
 
     this.emit('remove_category', [category]);
   }
@@ -44,9 +42,8 @@ export default class Discussions extends Agent {
 
     const id = (await this.get('next_topic_id')) || 1;
 
-    this.write(`topic.${id}`, true);
+    this.write(`topic.${id}`, this.process.sender);
     this.write('next_topic_id', id + 1);
-    this.write(`owner.topic.${id}`, this.process.sender);
 
     this.emit('add_topic', [id, author, category, parent, metadataURI]);
   }
@@ -55,7 +52,7 @@ export default class Discussions extends Agent {
     console.log('edit_topic', topic, metadataURI);
 
     this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
-    await this.authenticate(this.process.sender, await this.get(`owner.topic.${topic}`));
+    await this.authenticate(this.process.sender, await this.get(`topic.${topic}`));
 
     this.emit('edit_topic', [topic, metadataURI]);
   }
@@ -64,10 +61,9 @@ export default class Discussions extends Agent {
     console.log('remove_topic', topic);
 
     this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
-    await this.authenticate(this.process.sender, await this.get(`owner.topic.${topic}`));
+    await this.authenticate(this.process.sender, await this.get(`topic.${topic}`));
 
     this.delete(`topic.${topic}`);
-    this.delete(`owner.topic.${topic}`);
 
     this.emit('remove_topic', [topic]);
   }
@@ -76,7 +72,7 @@ export default class Discussions extends Agent {
     console.log('pin_topic', topic);
 
     this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
-    await this.authenticate(this.process.sender, await this.get(`owner.topic.${topic}`));
+    await this.authenticate(this.process.sender, await this.get(`topic.${topic}`));
 
     this.emit('pin_topic', [topic]);
   }
@@ -85,7 +81,7 @@ export default class Discussions extends Agent {
     console.log('unpin_topic', topic);
 
     this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
-    await this.authenticate(this.process.sender, await this.get(`owner.topic.${topic}`));
+    await this.authenticate(this.process.sender, await this.get(`topic.${topic}`));
 
     this.emit('unpin_topic', [topic]);
   }
@@ -96,7 +92,7 @@ export default class Discussions extends Agent {
     this.assert(!voter, 'invalid voter');
     this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
 
-    this.write(`owner.vote.${voter}`, this.process.sender);
+    this.write(`vote.${voter}`, this.process.sender);
 
     this.emit('vote', [voter, topic, choice]);
   }
@@ -106,7 +102,7 @@ export default class Discussions extends Agent {
 
     this.assert(!voter, 'invalid voter');
     this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
-    this.assert((await this.get(`owner.vote.${voter}`)) !== this.process.sender, 'no permission');
+    this.assert((await this.get(`vote.${voter}`)) !== this.process.sender, 'no permission');
 
     this.emit('unvote', [voter, topic]);
   }
