@@ -36,6 +36,7 @@ export default class Discussions extends Agent {
     );
 
     this.delete(`category.${category}`);
+    this.delete(`owner.category.${category}`);
 
     this.emit('remove_category', [category]);
   }
@@ -71,6 +72,7 @@ export default class Discussions extends Agent {
     this.assert((await this.get(`owner.topic.${topic}`)) !== this.process.sender, 'no permission');
 
     this.delete(`topic.${topic}`);
+    this.delete(`owner.topic.${topic}`);
 
     this.emit('remove_topic', [topic]);
   }
