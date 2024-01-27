@@ -1,4 +1,4 @@
 [
-  "function add_alias(string alias)",
-  "function remove_alias(string alias)"
+  "function addAlias(string alias, string target)",
+  "function authenticate(string alias, string target)"
 ]

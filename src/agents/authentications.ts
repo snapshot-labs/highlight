@@ -1,28 +1,20 @@
 import Agent from '../highlight/agent';
 
 export default class Authentications extends Agent {
-  async add_alias(alias: string) {
-    console.log('add_alias', alias);
+  async add_alias(alias: string, target: string) {
+    console.log('add_alias', alias, target);
 
-    const sender = this.process.sender;
+    this.assert(await this.has(`alias.${alias}`), 'invalid alias');
+    this.assert(target !== this.process.sender, 'unauthorized');
 
-    this.write(`alias.${alias}`, true);
-    this.write(`owner.alias.${alias}`, sender);
+    this.write(`alias.${alias}`, target);
 
-    this.emit('add_alias', [alias, sender]);
+    this.emit('add_alias', [alias, target]);
   }
 
-  async remove_alias(alias: string) {
-    console.log('remove_alias', alias);
+  async authenticate(alias: string, target: string): Promise<boolean> {
+    console.log('is_authorized', alias, target);
 
-    const sender = this.process.sender;
-
-    this.assert(!(await this.has(`alias.${alias}`)), 'invalid alias');
-    this.assert((await this.get(`owner.alias.${alias}`)) !== sender, 'no permission');
-
-    this.delete(`alias.${alias}`);
-    this.delete(`owner.alias.${alias}`);
-
-    this.emit('remove_alias', [alias, sender]);
+    return alias === target || target === (await this.get(`alias.${alias}`));
   }
 }

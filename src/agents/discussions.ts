@@ -1,4 +1,5 @@
 import Agent from '../highlight/agent';
+import { AGENTS_MAP as agents } from './index';
 
 export default class Discussions extends Agent {
   async add_category(parent: number, metadataURI: string) {
@@ -18,10 +19,7 @@ export default class Discussions extends Agent {
   async edit_category(category: number, metadataURI: string) {
     console.log('edit_category', category, metadataURI);
 
-    this.assert(
-      (await this.get(`owner.category.${category}`)) !== this.process.sender,
-      'no permission'
-    );
+    await this.authenticate(this.process.sender, await this.get(`owner.category.${category}`));
 
     this.emit('edit_category', [category, metadataURI]);
   }
@@ -30,10 +28,7 @@ export default class Discussions extends Agent {
     console.log('remove_category', category);
 
     this.assert(!(await this.has(`category.${category}`)), 'invalid category');
-    this.assert(
-      (await this.get(`owner.category.${category}`)) !== this.process.sender,
-      'no permission'
-    );
+    await this.authenticate(this.process.sender, await this.get(`owner.category.${category}`));
 
     this.delete(`category.${category}`);
     this.delete(`owner.category.${category}`);
@@ -60,7 +55,7 @@ export default class Discussions extends Agent {
     console.log('edit_topic', topic, metadataURI);
 
     this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
-    this.assert((await this.get(`owner.topic.${topic}`)) !== this.process.sender, 'no permission');
+    await this.authenticate(this.process.sender, await this.get(`owner.topic.${topic}`));
 
     this.emit('edit_topic', [topic, metadataURI]);
   }
@@ -69,7 +64,7 @@ export default class Discussions extends Agent {
     console.log('remove_topic', topic);
 
     this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
-    this.assert((await this.get(`owner.topic.${topic}`)) !== this.process.sender, 'no permission');
+    await this.authenticate(this.process.sender, await this.get(`owner.topic.${topic}`));
 
     this.delete(`topic.${topic}`);
     this.delete(`owner.topic.${topic}`);
@@ -81,7 +76,7 @@ export default class Discussions extends Agent {
     console.log('pin_topic', topic);
 
     this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
-    this.assert((await this.get(`owner.topic.${topic}`)) !== this.process.sender, 'no permission');
+    await this.authenticate(this.process.sender, await this.get(`owner.topic.${topic}`));
 
     this.emit('pin_topic', [topic]);
   }
@@ -90,7 +85,7 @@ export default class Discussions extends Agent {
     console.log('unpin_topic', topic);
 
     this.assert(!(await this.has(`topic.${topic}`)), 'invalid topic');
-    this.assert((await this.get(`owner.topic.${topic}`)) !== this.process.sender, 'no permission');
+    await this.authenticate(this.process.sender, await this.get(`owner.topic.${topic}`));
 
     this.emit('unpin_topic', [topic]);
   }
@@ -114,5 +109,11 @@ export default class Discussions extends Agent {
     this.assert((await this.get(`owner.vote.${voter}`)) !== this.process.sender, 'no permission');
 
     this.emit('unvote', [voter, topic]);
+  }
+
+  private async authenticate(wallet: string, target: string) {
+    const authAgent = agents['0x0000000000000000000000000000000000000004'](this.process);
+
+    this.assert(await authAgent.authenticate(wallet, target), 'unauthorized');
   }
 }
