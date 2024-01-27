@@ -40,16 +40,6 @@ export default class Agent {
     return await this.process.get(this.id, key);
   }
 
-  createEntity(type: string, id: string | number) {
-    this.write(`owner.${type}.${id}`, this.process.from);
-    this.emit(type, [id.toString(), this.process.from]);
-  }
-
-  async hasPermissionOnEntity(type: string, id: string | number) {
-    const owner = await this.get(`owner.${type}.${id}`);
-    return owner === this.process.from;
-  }
-
   write(key: string, value: any) {
     this.process.write({
       agent: this.id,
