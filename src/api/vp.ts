@@ -7,6 +7,8 @@ export async function getVotingPower(
   voter: string,
   chainId: number
 ): Promise<string> {
+  if (chainId !== 11155111) return '0';
+
   const address = '0xFA60565Aa8Ce3dA049fE1B0b93640534eae84287'; // @TODO find correct contract address from space
   // const blockNum = 5238678; // @TODO find correct proposal snapshot block number
   const abi = [
@@ -16,7 +18,13 @@ export async function getVotingPower(
   const provider = new StaticJsonRpcProvider(`https://rpc.brovider.xyz/${chainId}`, chainId);
   const contract = new Contract(address, abi, provider);
 
-  const vp = await contract.getVotes(voter);
+  try {
+    const vp = await contract.getVotes(voter);
 
-  return vp.toString();
+    return vp.toString();
+  } catch (e) {
+    console.log(e);
+
+    return '0';
+  }
 }
