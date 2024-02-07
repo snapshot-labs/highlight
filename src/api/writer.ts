@@ -350,9 +350,11 @@ export const handleVote = async ({ payload }) => {
   userEntity.created = timestamp;
   spaceEntity.vote_count += 1;
   proposalEntity.vote_count += 1;
-  proposalEntity.scores_total = (BigInt(proposalEntity.scores_total) + BigInt(vp)).toString();
+  proposalEntity.scores_total = (
+    BigInt(proposalEntity.scores_total || '0') + BigInt(vp)
+  ).toString();
   proposalEntity[`scores_${choice}`] = (
-    BigInt(proposalEntity[`scores_${choice}`]) + BigInt(vp)
+    BigInt(proposalEntity[`scores_${choice}`] || '0') + BigInt(vp)
   ).toString();
 
   vote.voter = voter;
