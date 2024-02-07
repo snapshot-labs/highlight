@@ -11,7 +11,8 @@ import {
   Vote
 } from '../../.checkpoint/models';
 import { getJSON } from '../utils';
-import { getEntity, getStorage } from './utils';
+import { getEntity } from './utils';
+import { getVotingPower } from './vp';
 
 /* Discussions */
 
@@ -339,13 +340,7 @@ export const handleVote = async ({ payload }) => {
   const id = `${uniqueProposalId}/${voter}`;
   const timestamp = ~~(Date.now() / 1e3); // @TODO change to unit timestamp
 
-  // Get voting power
-  const contract = '0xF524a5E0E153506b70994a2e01a890858728Bcd9';
-  const index = 0;
-  const blockNum = 9808461;
-
-  const storage = await getStorage(contract, index, blockNum, 5, voter);
-
+  const vp = await getVotingPower(space, proposalId, voter, chainId);
   const userEntity: SXUser = await getEntity(SXUser, voter);
   const spaceEntity: SXSpace = await getEntity(SXSpace, space);
   const proposalEntity: SXProposal = await getEntity(SXProposal, uniqueProposalId);
@@ -355,16 +350,16 @@ export const handleVote = async ({ payload }) => {
   userEntity.created = timestamp;
   spaceEntity.vote_count += 1;
   proposalEntity.vote_count += 1;
-  proposalEntity.scores_total = (BigInt(proposalEntity.scores_total) + BigInt(storage)).toString();
+  proposalEntity.scores_total = (BigInt(proposalEntity.scores_total) + BigInt(vp)).toString();
   proposalEntity[`scores_${choice}`] = (
-    BigInt(proposalEntity[`scores_${choice}`]) + BigInt(storage)
+    BigInt(proposalEntity[`scores_${choice}`]) + BigInt(vp)
   ).toString();
 
   vote.voter = voter;
   vote.space = space;
   vote.proposal = proposalId;
   vote.choice = choice;
-  vote.vp = storage;
+  vote.vp = vp;
   vote.created = timestamp;
   vote.chain_id = chainId;
   vote.sig = sig;
