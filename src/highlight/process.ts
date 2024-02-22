@@ -7,9 +7,11 @@ export default class Process {
   public writes: Storage[] = [];
   public state: Record<string, Record<string, string>> = {};
   public steps = 0;
+  public sender: string;
 
-  constructor({ adapter }) {
+  constructor({ adapter, sender }) {
     this.adapter = adapter;
+    this.sender = sender;
   }
 
   emit(event: Event) {

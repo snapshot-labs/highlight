@@ -1,0 +1,4 @@
+[
+  "function addAlias(string alias, string target)",
+  "function authenticate(string alias, string target)"
+]

@@ -1,10 +1,12 @@
 import Profiles from './profiles';
 import Discussions from './discussions';
 import Votes from './votes';
+import Authentications from './authentications';
 import Process from '../highlight/process';
 import ProfilesAbi from './abis/profiles.json';
 import DiscussionsAbi from './abis/discussions.json';
 import VotesAbi from './abis/votes.json';
+import AuthenticationsAbi from './abis/authentications.json';
 
 export const AGENTS_MAP = {
   '0x0000000000000000000000000000000000000001': (process: Process) => {
@@ -15,5 +17,8 @@ export const AGENTS_MAP = {
   },
   '0x0000000000000000000000000000000000000003': (process: Process) => {
     return new Votes('votes', process, VotesAbi);
+  },
+  '0x0000000000000000000000000000000000000004': (process: Process) => {
+    return new Authentications('authentications', process, AuthenticationsAbi);
   }
 };
