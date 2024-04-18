@@ -13,6 +13,7 @@ async function getProposal(space: string, proposalId: number) {
       query: `{
         proposal(id: "${space}/${proposalId}") {
           snapshot
+          axiom_snapshot_address
         }
       }`
     })
@@ -34,7 +35,7 @@ export async function getVotingPower(
 
   if (!proposal) return '0';
 
-  const address = '0xFA60565Aa8Ce3dA049fE1B0b93640534eae84287'; // @TODO find correct contract address from space
+  const address = proposal.axiom_snapshot_address;
   const blockNum = proposal.snapshot;
   const abi = ['function getPastVotes(address,uint256) view returns (uint256)'];
   const provider = new StaticJsonRpcProvider(`https://rpc.brovider.xyz/${chainId}`, chainId);
