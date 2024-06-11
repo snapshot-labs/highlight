@@ -39,8 +39,13 @@ export class HighlightProvider extends BaseProvider {
       throw 'empty block';
     }
 
-    await this.handleBlock(block);
-    await this.instance.setLastIndexedBlock(lastMci);
+    try {
+      await this.handleBlock(block);
+      await this.instance.setLastIndexedBlock(lastMci);
+    } catch (e) {
+      console.log('error when handling block', e);
+      throw e;
+    }
 
     lastIndexedMci = lastMci;
 
