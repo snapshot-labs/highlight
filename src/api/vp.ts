@@ -33,13 +33,12 @@ export async function getVotingPower(
 
   const proposal = await getProposal(space, proposalId);
 
-  if (!proposal) return '0';
+  if (!proposal || !proposal.axiom_snapshot_address) return '0';
 
-  const address = proposal.axiom_snapshot_address;
   const blockNum = proposal.snapshot;
   const abi = ['function getPastVotes(address,uint256) view returns (uint256)'];
   const provider = new StaticJsonRpcProvider(`https://rpc.brovider.xyz/${chainId}`, chainId);
-  const contract = new Contract(address, abi, provider);
+  const contract = new Contract(proposal.axiom_snapshot_address, abi, provider);
 
   try {
     const vp = await contract.getPastVotes(voter, blockNum);
