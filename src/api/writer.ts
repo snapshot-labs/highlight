@@ -335,10 +335,14 @@ export const handleSetStatement = async ({ payload }) => {
 export const handleVote = async ({ payload }) => {
   console.log('Handle vote', payload);
 
-  const [space, voter, proposalId, choice, chainId, sig] = payload.data;
+  const [space, voter, proposalId, rawChoice, chainId, sig] = payload.data;
   const uniqueProposalId = `${space}/${proposalId}`;
   const id = `${uniqueProposalId}/${voter}`;
   const timestamp = ~~(Date.now() / 1e3); // @TODO change to unit timestamp
+  let choice = rawChoice;
+  if (rawChoice === 0) choice = 2;
+  else if (rawChoice === 1) choice = 1;
+  else if (rawChoice === 2) choice = 3;
 
   const vp = await getVotingPower(space, proposalId, voter, chainId);
   const userEntity: SXUser = await getEntity(SXUser, voter);
