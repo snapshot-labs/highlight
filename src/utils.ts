@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import { serialize } from '@ethersproject/transactions';
 import { keccak256 } from '@ethersproject/keccak256';
 import { Response } from 'express';
