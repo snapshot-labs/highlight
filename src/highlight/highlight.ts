@@ -3,6 +3,7 @@ import { Adapter } from './adapter/adapter';
 import Agent from './agent';
 import Process from './process';
 import {
+  Event,
   GetEventsRequest,
   GetUnitReceiptRequest,
   PostJointRequest
@@ -38,21 +39,23 @@ export default class Highlight {
     let execution;
     let steps = 0;
 
-    if (params.unit.txData.to) {
-      const process = new Process({ adapter: this.adapter });
-      try {
-        await this.invoke(
-          process,
-          params.unit.txData.to,
-          params.unit.txData.data
-        );
+    if (!params.unit.txData.to) {
+      throw new Error('Missing to address');
+    }
 
-        execution = await process.execute();
-        steps = process.steps;
-      } catch (e) {
-        console.log(e);
-        return Promise.reject(e);
-      }
+    const process = new Process({ adapter: this.adapter });
+    try {
+      await this.invoke(
+        process,
+        params.unit.txData.to,
+        params.unit.txData.data
+      );
+
+      execution = await process.execute();
+      steps = process.steps;
+    } catch (e) {
+      console.log(e);
+      throw e;
     }
 
     let id = (await this.adapter.get('units:id')) || 0;
@@ -61,7 +64,7 @@ export default class Highlight {
     const multi = this.adapter.multi();
     multi.incr(`sender_txs_count:${params.unit.sender_address}`);
     multi.set(`unit:${id}`, params.unit);
-    multi.set(`unit_events:${id}`, execution.events || []);
+    multi.set(`unit_events:${id}`, execution.events);
     multi.set(`units_map:${params.unit.unit_hash}`, id);
     multi.set('units:id', id);
 
@@ -87,14 +90,14 @@ export default class Highlight {
     const keys = [...Array(params.end - params.start).keys()].map(
       (key, i) => `event:${i + params.start}`
     );
-    const events = await this.adapter.mget(keys);
+    const events: Event[] = await this.adapter.mget(keys);
 
     return events.filter(event => event !== null);
   }
 
   async getUnitReceipt(params: GetUnitReceiptRequest) {
     const unitId = await this.adapter.get(`units_map:${params.hash}`);
-    const events = await this.adapter.get(`unit_events:${unitId}`);
+    const events: Event[] = await this.adapter.get(`unit_events:${unitId}`);
 
     return {
       events: events.filter(event => event !== null)
