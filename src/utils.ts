@@ -17,7 +17,7 @@ export function computeUnitHash(unit: Unit) {
   return keccak256(serializedTx);
 }
 
-export function getUrl(uri, gateway = IPFS_GATEWAY) {
+export function getUrl(uri: string, gateway = IPFS_GATEWAY) {
   const ipfsGateway = `https://${gateway}`;
   if (!uri) return null;
   if (
@@ -35,8 +35,10 @@ export function getUrl(uri, gateway = IPFS_GATEWAY) {
   return uri;
 }
 
-export async function getJSON(uri) {
+export async function getJSON(uri: string) {
   const url = getUrl(uri);
+  if (!url) return null;
+
   return fetch(url).then(res => res.json());
 }
 
@@ -48,7 +50,7 @@ export function rpcError(
   res: Response,
   status: number,
   code: number,
-  message: any,
+  message: unknown,
   id: number | null
 ) {
   return res.status(status).json({
@@ -58,7 +60,7 @@ export function rpcError(
   });
 }
 
-export async function sleep(ms) {
+export async function sleep(ms: number) {
   return new Promise(resolve => {
     setTimeout(resolve, ms);
   });
