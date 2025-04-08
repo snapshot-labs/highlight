@@ -5,7 +5,7 @@ class RedisMulti extends Multi {
   private client: RedisClientType;
   private multi: ReturnType<RedisClientType['multi']>;
 
-  constructor({ client }) {
+  constructor({ client }: { client: RedisClientType }) {
     super();
     this.client = client;
     this.multi = this.client.multi();
@@ -32,7 +32,7 @@ export class RedisAdapter extends Adapter {
   private url: string;
   private client: RedisClientType;
 
-  constructor({ url }) {
+  constructor({ url }: { url: string }) {
     super();
     this.url = url;
     this.client = createClient({ url: this.url });

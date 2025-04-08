@@ -4,7 +4,7 @@ class MemoryMulti extends Multi {
   private adapter: Adapter;
   private actions: any[];
 
-  constructor({ adapter }) {
+  constructor({ adapter }: { adapter: Adapter }) {
     super();
     this.adapter = adapter;
     this.actions = [];
@@ -37,7 +37,7 @@ class MemoryMulti extends Multi {
 }
 
 export class MemoryAdapter extends Adapter {
-  private state = {};
+  private state: Record<string, any> = {};
 
   async set(key: string, value: any) {
     this.state[key] = value;
