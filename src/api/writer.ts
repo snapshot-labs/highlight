@@ -216,7 +216,7 @@ export const handleTopicVote: Writer = async ({ payload }) => {
   const [voter, topicId, choice] = payload.data;
   const id = `${voter}/${topicId}`;
   let newVote = false;
-  let previousVoteScore;
+  let previousVoteScore = 0;
 
   let vote = await TopicVote.loadEntity(id, indexerName);
   if (!vote) {
@@ -345,14 +345,18 @@ export const handleSetStatement: Writer = async ({ payload }) => {
 export const handleVote: Writer = async ({ payload }) => {
   console.log('Handle vote', payload);
 
+  const mapChoice = (rawChoice: number): 1 | 2 | 3 => {
+    if (rawChoice === 0) return 2;
+    else if (rawChoice === 1) return 1;
+    else if (rawChoice === 2) return 3;
+    throw new Error('Invalid choice');
+  };
+
   const [space, voter, proposalId, rawChoice, chainId, sig] = payload.data;
   const uniqueProposalId = `${space}/${proposalId}`;
   const id = `${uniqueProposalId}/${voter}`;
   const timestamp = ~~(Date.now() / 1e3); // @TODO change to unit timestamp
-  let choice = rawChoice;
-  if (rawChoice === 0) choice = 2;
-  else if (rawChoice === 1) choice = 1;
-  else if (rawChoice === 2) choice = 3;
+  const choice = mapChoice(rawChoice);
 
   const vp = await getVotingPower(space, proposalId, voter, chainId);
   const userEntity: SXUser = await getEntity(SXUser, voter, indexerName);
