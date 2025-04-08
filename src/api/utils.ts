@@ -19,11 +19,11 @@ export async function getStorage(contract, index, blockNum, chainId, address) {
   return BigNumber.from(result).toBigInt().toString();
 }
 
-export async function getEntity(entity, id) {
-  let item = await entity.loadEntity(id);
+export async function getEntity(entity: any, id: string, indexerName: string) {
+  let item = await entity.loadEntity(id, indexerName);
 
   if (!item) {
-    item = new entity(id);
+    item = new entity(id, indexerName);
   }
 
   return item;

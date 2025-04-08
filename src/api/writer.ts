@@ -11,17 +11,20 @@ import {
   Vote
 } from '../../.checkpoint/models';
 import { getJSON } from '../utils';
+import { Writer } from './indexer/types';
 import { getEntity } from './utils';
 import { getVotingPower } from './vp';
 
 /* Discussions */
 
-export const handleAddCategory = async ({ payload }) => {
+const indexerName = 'highlight';
+
+export const handleAddCategory: Writer = async ({ payload }) => {
   console.log('Handle add category', payload);
 
   const [id, parent, metadataURI] = payload.data;
 
-  const category = new Category(id);
+  const category = new Category(id, indexerName);
   category.parent = parent;
   category.metadata_uri = metadataURI;
 
@@ -37,7 +40,10 @@ export const handleAddCategory = async ({ payload }) => {
   await category.save();
 
   if (parent !== 0) {
-    const parentCategory = await Category.loadEntity(category.parent);
+    const parentCategory = await Category.loadEntity(
+      category.parent,
+      indexerName
+    );
 
     if (parentCategory) {
       parentCategory.category_count += 1;
@@ -47,12 +53,12 @@ export const handleAddCategory = async ({ payload }) => {
   }
 };
 
-export const handleEditCategory = async ({ payload }) => {
+export const handleEditCategory: Writer = async ({ payload }) => {
   console.log('Handle edit category', payload);
 
   const [id, metadataURI] = payload.data;
 
-  const category = await Category.loadEntity(id);
+  const category = await Category.loadEntity(id, indexerName);
 
   if (category) {
     try {
@@ -68,18 +74,18 @@ export const handleEditCategory = async ({ payload }) => {
   }
 };
 
-export const handleRemoveCategory = async ({ payload }) => {
+export const handleRemoveCategory: Writer = async ({ payload }) => {
   console.log('Handle remove category', payload);
 
   const [id] = payload.data;
 
-  const category = await Category.loadEntity(id);
+  const category = await Category.loadEntity(id, indexerName);
 
   if (category) {
     const parent = category.parent || 0;
 
     if (parent !== 0) {
-      const parentCategory = await Category.loadEntity(parent);
+      const parentCategory = await Category.loadEntity(parent, indexerName);
 
       if (parentCategory) {
         parentCategory.category_count -= 1;
@@ -92,12 +98,12 @@ export const handleRemoveCategory = async ({ payload }) => {
   }
 };
 
-export const handleAddTopic = async ({ payload }) => {
+export const handleAddTopic: Writer = async ({ payload }) => {
   console.log('Handle add topic', payload);
 
   const [id, author, categoryId, parent, metadataUri] = payload.data;
 
-  const topic = new Topic(id);
+  const topic = new Topic(id, indexerName);
   if (categoryId) topic.category = categoryId;
   topic.author = author;
   topic.parent = parent;
@@ -116,7 +122,7 @@ export const handleAddTopic = async ({ payload }) => {
   await topic.save();
 
   if (parent !== 0) {
-    const parentTopic = await Topic.loadEntity(parent);
+    const parentTopic = await Topic.loadEntity(parent, indexerName);
 
     if (parentTopic) {
       parentTopic.reply_count += 1;
@@ -124,7 +130,7 @@ export const handleAddTopic = async ({ payload }) => {
       await parentTopic.save();
     }
   } else {
-    const category = await Category.loadEntity(categoryId);
+    const category = await Category.loadEntity(categoryId, indexerName);
     if (category) {
       category.topic_count += 1;
 
@@ -132,8 +138,8 @@ export const handleAddTopic = async ({ payload }) => {
     }
   }
 
-  const user: User = await getEntity(User, author);
-  const profile: Profile = await getEntity(Profile, author);
+  const user: User = await getEntity(User, author, indexerName);
+  const profile: Profile = await getEntity(Profile, author, indexerName);
 
   user.profile = author;
   user.topic_count += 1;
@@ -143,12 +149,12 @@ export const handleAddTopic = async ({ payload }) => {
   await profile.save();
 };
 
-export const handleEditTopic = async ({ payload }) => {
+export const handleEditTopic: Writer = async ({ payload }) => {
   console.log('Handle edit topic', payload);
 
   const [id, metadataURI] = payload.data;
 
-  const topic = await Topic.loadEntity(id);
+  const topic = await Topic.loadEntity(id, indexerName);
 
   if (topic) {
     try {
@@ -164,24 +170,24 @@ export const handleEditTopic = async ({ payload }) => {
   }
 };
 
-export const handleRemoveTopic = async ({ payload }) => {
+export const handleRemoveTopic: Writer = async ({ payload }) => {
   console.log('Handle remove topic', payload);
 
   const [id] = payload.data;
 
-  const topic = await Topic.loadEntity(id);
+  const topic = await Topic.loadEntity(id, indexerName);
 
   if (topic) {
     await topic.delete();
   }
 };
 
-export const handlePinTopic = async ({ payload }) => {
+export const handlePinTopic: Writer = async ({ payload }) => {
   console.log('Handle pin topic', payload);
 
   const [id] = payload.data;
 
-  const topic = await Topic.loadEntity(id);
+  const topic = await Topic.loadEntity(id, indexerName);
 
   if (topic) {
     topic.pinned = true;
@@ -190,12 +196,12 @@ export const handlePinTopic = async ({ payload }) => {
   }
 };
 
-export const handleUnpinTopic = async ({ payload }) => {
+export const handleUnpinTopic: Writer = async ({ payload }) => {
   console.log('Handle unpin topic', payload);
 
   const [id] = payload.data;
 
-  const topic = await Topic.loadEntity(id);
+  const topic = await Topic.loadEntity(id, indexerName);
 
   if (topic) {
     topic.pinned = false;
@@ -204,7 +210,7 @@ export const handleUnpinTopic = async ({ payload }) => {
   }
 };
 
-export const handleTopicVote = async ({ payload }) => {
+export const handleTopicVote: Writer = async ({ payload }) => {
   console.log('Handle topic vote', payload);
 
   const [voter, topicId, choice] = payload.data;
@@ -212,9 +218,9 @@ export const handleTopicVote = async ({ payload }) => {
   let newVote = false;
   let previousVoteScore;
 
-  let vote = await TopicVote.loadEntity(id);
+  let vote = await TopicVote.loadEntity(id, indexerName);
   if (!vote) {
-    vote = new TopicVote(id);
+    vote = new TopicVote(id, indexerName);
     newVote = true;
   } else {
     previousVoteScore = vote.choice === 0 ? -1 : 1;
@@ -227,7 +233,7 @@ export const handleTopicVote = async ({ payload }) => {
 
   await vote.save();
 
-  const topic = await Topic.loadEntity(topicId);
+  const topic = await Topic.loadEntity(topicId, indexerName);
 
   if (topic) {
     topic.score += score;
@@ -240,8 +246,8 @@ export const handleTopicVote = async ({ payload }) => {
     await topic.save();
   }
 
-  const user: User = await getEntity(User, voter);
-  const profile: Profile = await getEntity(Profile, voter);
+  const user: User = await getEntity(User, voter, indexerName);
+  const profile: Profile = await getEntity(Profile, voter, indexerName);
 
   user.profile = voter;
   user.topic_vote_count += 1;
@@ -251,20 +257,20 @@ export const handleTopicVote = async ({ payload }) => {
   await profile.save();
 };
 
-export const handleTopicUnvote = async ({ payload }) => {
+export const handleTopicUnvote: Writer = async ({ payload }) => {
   console.log('Handle topic unvote', payload);
 
   const [voter, topic] = payload.data;
   const id = `${voter}/${topic}`;
 
-  const vote = await TopicVote.loadEntity(id);
+  const vote = await TopicVote.loadEntity(id, indexerName);
 
   if (vote) {
     await vote.delete();
   }
 
-  const user: User = await getEntity(User, voter);
-  const profile: Profile = await getEntity(Profile, voter);
+  const user: User = await getEntity(User, voter, indexerName);
+  const profile: Profile = await getEntity(Profile, voter, indexerName);
 
   user.profile = voter;
   user.topic_vote_count -= 1;
@@ -276,13 +282,13 @@ export const handleTopicUnvote = async ({ payload }) => {
 
 /* Profiles */
 
-export const handleSetProfile = async ({ payload }) => {
+export const handleSetProfile: Writer = async ({ payload }) => {
   console.log('Handle set profile', payload);
 
   const [id, metadataUri] = payload.data;
 
-  const user: User = await getEntity(User, id);
-  const profile: Profile = await getEntity(Profile, id);
+  const user: User = await getEntity(User, id, indexerName);
+  const profile: Profile = await getEntity(Profile, id, indexerName);
 
   user.profile = id;
   profile.user = id;
@@ -305,13 +311,17 @@ export const handleSetProfile = async ({ payload }) => {
   await profile.save();
 };
 
-export const handleSetStatement = async ({ payload }) => {
+export const handleSetStatement: Writer = async ({ payload }) => {
   console.log('Handle set statement', payload);
 
   const [id, org, metadataUri] = payload.data;
 
-  const user: User = await getEntity(User, id);
-  const statement: Statement = await getEntity(Statement, `${id}/${org}`);
+  const user: User = await getEntity(User, id, indexerName);
+  const statement: Statement = await getEntity(
+    Statement,
+    `${id}/${org}`,
+    indexerName
+  );
 
   statement.user = id;
   statement.org = org;
@@ -332,7 +342,7 @@ export const handleSetStatement = async ({ payload }) => {
 
 /* Votes */
 
-export const handleVote = async ({ payload }) => {
+export const handleVote: Writer = async ({ payload }) => {
   console.log('Handle vote', payload);
 
   const [space, voter, proposalId, rawChoice, chainId, sig] = payload.data;
@@ -345,13 +355,14 @@ export const handleVote = async ({ payload }) => {
   else if (rawChoice === 2) choice = 3;
 
   const vp = await getVotingPower(space, proposalId, voter, chainId);
-  const userEntity: SXUser = await getEntity(SXUser, voter);
-  const spaceEntity: SXSpace = await getEntity(SXSpace, space);
+  const userEntity: SXUser = await getEntity(SXUser, voter, indexerName);
+  const spaceEntity: SXSpace = await getEntity(SXSpace, space, indexerName);
   const proposalEntity: SXProposal = await getEntity(
     SXProposal,
-    uniqueProposalId
+    uniqueProposalId,
+    indexerName
   );
-  const vote: Vote = await getEntity(Vote, id);
+  const vote: Vote = await getEntity(Vote, id, indexerName);
 
   userEntity.vote_count += 1;
   userEntity.created = timestamp;

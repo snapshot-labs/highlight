@@ -2,8 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import Checkpoint, { LogLevel } from '@snapshot-labs/checkpoint';
 import config from './config.json';
-import { HighlightProvider } from './provider';
-import * as writer from './writer';
+import { HighlightIndexer } from './indexer';
+import overrides from './overrides.json';
+import * as writers from './writer';
 
 const dir = __dirname.endsWith('dist/src/api') ? '../' : '';
 const schemaFile = path.join(__dirname, `${dir}../../src/api/schema.gql`);
@@ -13,14 +14,15 @@ if (process.env.CA_CERT) {
   process.env.CA_CERT = process.env.CA_CERT.replace(/\\n/g, '\n');
 }
 
-// @ts-ignore
-export const checkpoint = new Checkpoint(config, writer, schema, {
+export const checkpoint = new Checkpoint(schema, {
   logLevel: LogLevel.Fatal,
   prettifyLogs: process.env.NODE_ENV !== 'production',
-  NetworkProvider: HighlightProvider,
-  fetchInterval: 5e2,
-  dbConnection: process.env.API_DATABASE_URL
+  dbConnection: process.env.API_DATABASE_URL,
+  overridesConfig: overrides
 });
+
+const highlightIndexer = new HighlightIndexer(writers);
+checkpoint.addIndexer('highlight', config, highlightIndexer);
 
 async function start() {
   await checkpoint.reset();

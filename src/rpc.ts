@@ -7,7 +7,7 @@ import {
 } from '@ethersproject/transactions';
 import express from 'express';
 import { AGENTS_MAP } from './agents';
-import { lastIndexedMci } from './api/provider';
+import { lastIndexedMci } from './api/indexer/provider';
 import { RedisAdapter } from './highlight/adapter/redis';
 import Highlight from './highlight/highlight';
 import { computeUnitHash, rpcError, rpcSuccess, sleep } from './utils';

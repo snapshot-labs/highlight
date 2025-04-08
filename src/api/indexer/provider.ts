@@ -1,15 +1,23 @@
 import { BaseProvider } from '@snapshot-labs/checkpoint/dist/src/providers';
-import { highlight } from '../rpc';
+import { Writer } from './types';
+import { highlight } from '../../rpc';
 
 export let lastIndexedMci = 0;
 
 export class HighlightProvider extends BaseProvider {
+  private readonly writers: Record<string, Writer>;
+
   constructor({
     instance,
     log,
-    abis
-  }: ConstructorParameters<typeof BaseProvider>[0]) {
+    abis,
+    writers
+  }: ConstructorParameters<typeof BaseProvider>[0] & {
+    writers: Record<string, Writer>;
+  }) {
     super({ instance, log, abis });
+
+    this.writers = writers;
   }
 
   async getNetworkIdentifier() {
@@ -21,7 +29,7 @@ export class HighlightProvider extends BaseProvider {
   }
 
   async getLatestBlockNumber() {
-    return await highlight.getMci();
+    return highlight.getMci();
   }
 
   formatAddresses(addresses: string[]): string[] {
@@ -69,7 +77,7 @@ export class HighlightProvider extends BaseProvider {
   private async handleEvent(block, event) {
     this.log.debug({ msgIndex: event.id }, 'handling event');
 
-    const writerParams = await this.instance.getWriterParams();
+    const helpers = this.instance.getWriterHelpers();
 
     for (const source of this.instance.config.sources || []) {
       for (const sourceEvent of source.events) {
@@ -83,12 +91,11 @@ export class HighlightProvider extends BaseProvider {
             'found event'
           );
 
-          await this.instance.writer[sourceEvent.fn]({
+          await this.writers[sourceEvent.fn]({
             source,
             block,
-            // @ts-ignore
             payload: event,
-            ...writerParams
+            helpers
           });
         }
       }
