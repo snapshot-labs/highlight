@@ -48,7 +48,7 @@ export class MemoryAdapter extends Adapter {
   }
 
   async mget(keys: string[]) {
-    return keys.map(key => this.get(key));
+    return Promise.all(keys.map(key => this.get(key)));
   }
 
   async del(key: string) {
