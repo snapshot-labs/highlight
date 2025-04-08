@@ -8,7 +8,7 @@ export default class Process {
   public state: Record<string, Record<string, string>> = {};
   public steps = 0;
 
-  constructor({ adapter }) {
+  constructor({ adapter }: { adapter: Adapter }) {
     this.adapter = adapter;
   }
 

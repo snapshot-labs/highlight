@@ -29,10 +29,15 @@ export default class Agent {
       return arg;
     });
 
-    return this[handlerName](...parsedArgs);
+    const handler = (this as Record<string, any>)[handlerName];
+    if (typeof handler === 'function') {
+      return handler.bind(this)(...parsedArgs);
+    }
+
+    throw new Error(`Handler not found: ${handlerName}`);
   }
 
-  assert(condition, e) {
+  assert(condition: unknown, e: string) {
     if (condition) throw new Error(e);
   }
 
