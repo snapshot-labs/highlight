@@ -1,12 +1,16 @@
-import express from 'express';
 import { getAddress } from '@ethersproject/address';
 import { keccak256 } from '@ethersproject/keccak256';
-import { parse as parseTransaction, recoverAddress, serialize } from '@ethersproject/transactions';
-import Highlight from './highlight/highlight';
-import { RedisAdapter } from './highlight/adapter/redis';
+import {
+  parse as parseTransaction,
+  recoverAddress,
+  serialize
+} from '@ethersproject/transactions';
+import express from 'express';
 import { AGENTS_MAP } from './agents';
 import { lastIndexedMci } from './api/provider';
-import { rpcSuccess, rpcError, sleep, computeUnitHash } from './utils';
+import { RedisAdapter } from './highlight/adapter/redis';
+import Highlight from './highlight/highlight';
+import { computeUnitHash, rpcError, rpcSuccess, sleep } from './utils';
 
 const DATABASE_URL = process.env.DATABASE_URL || '';
 
@@ -59,7 +63,8 @@ router.post('/', async (req, res) => {
         res,
         {
           hash: '0xc7ffa60cafcdc0ddda8022fbda89675097fc0ede9af1bb12448efe756dd035ff',
-          parentHash: '0xc7ffa60cafcdc0ddda8022fbda89675097fc0ede9af1bb12448efe756dd035ff',
+          parentHash:
+            '0xc7ffa60cafcdc0ddda8022fbda89675097fc0ede9af1bb12448efe756dd035ff',
           timestamp: '0x0',
           nonce: '0x0000000000000000',
           difficulty: '0x0',
@@ -137,7 +142,10 @@ router.post('/', async (req, res) => {
       };
 
       const serializedTx = serialize(txData);
-      const recoveredAddress = recoverAddress(keccak256(serializedTx), signature);
+      const recoveredAddress = recoverAddress(
+        keccak256(serializedTx),
+        signature
+      );
 
       if (recoveredAddress !== tx.from) {
         return rpcError(res, 500, -32003, 'invalid transaction', id);

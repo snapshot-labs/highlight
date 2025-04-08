@@ -1,9 +1,9 @@
-import Profiles from './profiles';
+import DiscussionsAbi from './abis/discussions.json';
 import Discussions from './discussions';
+import Profiles from './profiles';
 import Votes from './votes';
 import Process from '../highlight/process';
 import ProfilesAbi from './abis/profiles.json';
-import DiscussionsAbi from './abis/discussions.json';
 import VotesAbi from './abis/votes.json';
 
 export const AGENTS_MAP = {

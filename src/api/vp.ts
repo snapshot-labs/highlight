@@ -1,7 +1,8 @@
-import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { Contract } from '@ethersproject/contracts';
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
-const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/23545/sx-sepolia/version/latest';
+const SUBGRAPH_URL =
+  'https://api.studio.thegraph.com/query/23545/sx-sepolia/version/latest';
 
 async function getProposal(space: string, proposalId: number) {
   const res = await fetch(SUBGRAPH_URL, {
@@ -37,7 +38,10 @@ export async function getVotingPower(
 
   const blockNum = proposal.snapshot;
   const abi = ['function getPastVotes(address,uint256) view returns (uint256)'];
-  const provider = new StaticJsonRpcProvider(`https://rpc.brovider.xyz/${chainId}`, chainId);
+  const provider = new StaticJsonRpcProvider(
+    `https://rpc.brovider.xyz/${chainId}`,
+    chainId
+  );
   const contract = new Contract(proposal.axiom_snapshot_address, abi, provider);
 
   try {

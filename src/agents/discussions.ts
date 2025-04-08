@@ -6,7 +6,10 @@ export default class Discussions extends Agent {
 
     const id = (await this.get('next_category_id')) || 1;
 
-    this.assert(parent !== 0 && !(await this.has(`category.${parent}`)), 'invalid category');
+    this.assert(
+      parent !== 0 && !(await this.has(`category.${parent}`)),
+      'invalid category'
+    );
 
     this.write(`category.${id}`, true);
     this.write('next_category_id', id + 1);
@@ -30,11 +33,19 @@ export default class Discussions extends Agent {
     this.emit('remove_category', [category]);
   }
 
-  async add_topic(author: string, category: number, parent: number, metadataURI: string) {
+  async add_topic(
+    author: string,
+    category: number,
+    parent: number,
+    metadataURI: string
+  ) {
     console.log('add_topic', author, category, parent, metadataURI);
 
     this.assert(!author, 'invalid author');
-    this.assert(category !== 0 && !(await this.has(`category.${category}`)), 'invalid category');
+    this.assert(
+      category !== 0 && !(await this.has(`category.${category}`)),
+      'invalid category'
+    );
 
     const id = (await this.get('next_topic_id')) || 1;
 

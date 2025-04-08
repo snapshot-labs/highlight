@@ -4,7 +4,11 @@ import { highlight } from '../rpc';
 export let lastIndexedMci = 0;
 
 export class HighlightProvider extends BaseProvider {
-  constructor({ instance, log, abis }: ConstructorParameters<typeof BaseProvider>[0]) {
+  constructor({
+    instance,
+    log,
+    abis
+  }: ConstructorParameters<typeof BaseProvider>[0]) {
     super({ instance, log, abis });
   }
 
@@ -30,7 +34,7 @@ export class HighlightProvider extends BaseProvider {
       const endBlockNum = blockNum + 10;
       block = await highlight.getEvents({ start: blockNum, end: endBlockNum });
       lastMci = block.slice(-1)[0].id;
-    } catch (e) {
+    } catch {
       this.log.error(
         { blockNumber: blockNum, err: 'empty block' },
         'getting block failed... retrying'
@@ -71,7 +75,11 @@ export class HighlightProvider extends BaseProvider {
       for (const sourceEvent of source.events) {
         if (source.contract === event.agent && sourceEvent.name === event.key) {
           this.log.info(
-            { contract: source.contract, event: sourceEvent.name, handlerFn: sourceEvent.fn },
+            {
+              contract: source.contract,
+              event: sourceEvent.name,
+              handlerFn: sourceEvent.fn
+            },
             'found event'
           );
 

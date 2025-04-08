@@ -1,5 +1,5 @@
-import { serialize } from '@ethersproject/transactions';
 import { keccak256 } from '@ethersproject/keccak256';
+import { serialize } from '@ethersproject/transactions';
 import { Response } from 'express';
 import { Unit } from './highlight/types';
 
@@ -28,8 +28,10 @@ export function getUrl(uri, gateway = IPFS_GATEWAY) {
   )
     return `${ipfsGateway}/ipfs/${uri}`;
   const uriScheme = uri.split('://')[0];
-  if (uriScheme === 'ipfs') return uri.replace('ipfs://', `${ipfsGateway}/ipfs/`);
-  if (uriScheme === 'ipns') return uri.replace('ipns://', `${ipfsGateway}/ipns/`);
+  if (uriScheme === 'ipfs')
+    return uri.replace('ipfs://', `${ipfsGateway}/ipfs/`);
+  if (uriScheme === 'ipns')
+    return uri.replace('ipns://', `${ipfsGateway}/ipns/`);
   return uri;
 }
 

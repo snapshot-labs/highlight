@@ -1,13 +1,13 @@
 import {
   Category,
-  Topic,
-  TopicVote,
-  User,
   Profile,
   Statement,
   SXProposal,
   SXSpace,
   SXUser,
+  Topic,
+  TopicVote,
+  User,
   Vote
 } from '../../.checkpoint/models';
 import { getJSON } from '../utils';
@@ -347,7 +347,10 @@ export const handleVote = async ({ payload }) => {
   const vp = await getVotingPower(space, proposalId, voter, chainId);
   const userEntity: SXUser = await getEntity(SXUser, voter);
   const spaceEntity: SXSpace = await getEntity(SXSpace, space);
-  const proposalEntity: SXProposal = await getEntity(SXProposal, uniqueProposalId);
+  const proposalEntity: SXProposal = await getEntity(
+    SXProposal,
+    uniqueProposalId
+  );
   const vote: Vote = await getEntity(Vote, id);
 
   userEntity.vote_count += 1;
@@ -370,5 +373,10 @@ export const handleVote = async ({ payload }) => {
   vote.chain_id = chainId;
   vote.sig = sig;
 
-  await Promise.all([userEntity.save(), spaceEntity.save(), proposalEntity.save(), vote.save()]);
+  await Promise.all([
+    userEntity.save(),
+    spaceEntity.save(),
+    proposalEntity.save(),
+    vote.save()
+  ]);
 };

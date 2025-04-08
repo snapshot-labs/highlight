@@ -1,7 +1,7 @@
-import { StaticJsonRpcProvider } from '@ethersproject/providers';
-import { hexZeroPad, concat, hexlify } from '@ethersproject/bytes';
 import { BigNumber } from '@ethersproject/bignumber';
+import { concat, hexlify, hexZeroPad } from '@ethersproject/bytes';
 import { keccak256 } from '@ethersproject/keccak256';
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
 export async function getStorage(contract, index, blockNum, chainId, address) {
   const concated = concat([
@@ -9,7 +9,10 @@ export async function getStorage(contract, index, blockNum, chainId, address) {
     hexZeroPad(BigNumber.from(index).toHexString(), 32)
   ]);
   const key = keccak256(hexlify(concated));
-  const provider = new StaticJsonRpcProvider(`https://rpc.brovider.xyz/${chainId}`, chainId);
+  const provider = new StaticJsonRpcProvider(
+    `https://rpc.brovider.xyz/${chainId}`,
+    chainId
+  );
 
   const result = await provider.getStorageAt(contract, key, blockNum);
 

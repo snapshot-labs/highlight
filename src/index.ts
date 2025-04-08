@@ -1,8 +1,8 @@
 import 'dotenv/config';
-import express from 'express';
 import cors from 'cors';
-import rpc from './rpc';
+import express from 'express';
 import { checkpoint } from './api';
+import rpc from './rpc';
 
 const app = express();
 const PORT = process.env.PORT || 3000;

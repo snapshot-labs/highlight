@@ -7,7 +7,11 @@ export default class Agent {
   public process: Process;
   public iface: Interface;
 
-  constructor(id: string, process: Process, fragments: ConstructorParameters<typeof Interface>[0]) {
+  constructor(
+    id: string,
+    process: Process,
+    fragments: ConstructorParameters<typeof Interface>[0]
+  ) {
     this.id = id;
     this.process = process;
     this.iface = new Interface(fragments);

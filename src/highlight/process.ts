@@ -1,5 +1,5 @@
-import { Storage, Event } from './types';
-import type { Adapter } from './adapter/adapter';
+import { Adapter } from './adapter/adapter';
+import { Event, Storage } from './types';
 
 export default class Process {
   private adapter: Adapter;

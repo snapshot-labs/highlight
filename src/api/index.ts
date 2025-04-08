@@ -1,8 +1,8 @@
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
 import Checkpoint, { LogLevel } from '@snapshot-labs/checkpoint';
-import { HighlightProvider } from './provider';
 import config from './config.json';
+import { HighlightProvider } from './provider';
 import * as writer from './writer';
 
 const dir = __dirname.endsWith('dist/src/api') ? '../' : '';

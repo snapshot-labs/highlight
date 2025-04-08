@@ -1,8 +1,12 @@
 import AsyncLock from 'async-lock';
+import { Adapter } from './adapter/adapter';
 import Agent from './agent';
 import Process from './process';
-import type { GetEventsRequest, GetUnitReceiptRequest, PostJointRequest } from './types';
-import type { Adapter } from './adapter/adapter';
+import {
+  GetEventsRequest,
+  GetUnitReceiptRequest,
+  PostJointRequest
+} from './types';
 
 type AgentGetter = (process: Process) => Agent;
 
@@ -11,7 +15,13 @@ export default class Highlight {
   private asyncLock = new AsyncLock();
   public agents: Record<string, AgentGetter>;
 
-  constructor({ adapter, agents }: { adapter: Adapter; agents: Record<string, AgentGetter> }) {
+  constructor({
+    adapter,
+    agents
+  }: {
+    adapter: Adapter;
+    agents: Record<string, AgentGetter>;
+  }) {
     this.adapter = adapter;
     this.agents = agents;
   }
@@ -31,7 +41,11 @@ export default class Highlight {
     if (params.unit.txData.to) {
       const process = new Process({ adapter: this.adapter });
       try {
-        await this.invoke(process, params.unit.txData.to, params.unit.txData.data);
+        await this.invoke(
+          process,
+          params.unit.txData.to,
+          params.unit.txData.data
+        );
 
         execution = await process.execute();
         steps = process.steps;
