@@ -68,7 +68,7 @@ export class RedisAdapter extends Adapter {
   }
 
   async del(key: string) {
-    await this.client.del[key];
+    await this.client.del(key);
   }
 
   async incr(key: string) {
