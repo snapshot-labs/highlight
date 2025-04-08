@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "license": "MIT",
   "scripts": {
-    "lint": "eslint src/ --ext .ts --fix",
+    "lint": "eslint src/ --ext .ts",
+    "lint:fix": "yarn lint --fix",
     "test": "vitest",
     "prebuild": "checkpoint generate -o ./src/api/overrides.json -s ./src/api/schema.gql",
     "build": "tsc",
