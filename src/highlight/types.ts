@@ -46,9 +46,11 @@ export interface DeleteStorage {
   key: string;
 }
 
-export interface Event {
-  id?: number;
+export type Event = {
+  id: number;
   agent: string;
   key: string;
   data: any[];
-}
+};
+
+export type PendingEvent = Omit<Event, 'id'>;

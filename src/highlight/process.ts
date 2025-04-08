@@ -1,9 +1,9 @@
 import { Adapter } from './adapter/adapter';
-import { Event, Storage } from './types';
+import { PendingEvent, Storage } from './types';
 
 export default class Process {
   private adapter: Adapter;
-  public events: Event[] = [];
+  public events: PendingEvent[] = [];
   public writes: Storage[] = [];
   public state: Record<string, Record<string, string>> = {};
   public steps = 0;
@@ -12,7 +12,7 @@ export default class Process {
     this.adapter = adapter;
   }
 
-  emit(event: Event) {
+  emit(event: PendingEvent) {
     this.events.push(event);
   }
 
@@ -59,8 +59,10 @@ export default class Process {
 
       for (const event of this.events) {
         id++;
-        event.id = id;
-        multi.set(`event:${id}`, event);
+        multi.set(`event:${id}`, {
+          id,
+          ...event
+        });
       }
       multi.set('events:id', id);
     }

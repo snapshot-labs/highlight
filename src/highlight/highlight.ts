@@ -86,7 +86,7 @@ export default class Highlight {
     return agent.invoke(data);
   }
 
-  async getEvents(params: GetEventsRequest) {
+  async getEvents(params: GetEventsRequest): Promise<Event[]> {
     const keys = [...Array(params.end - params.start).keys()].map(
       (key, i) => `event:${i + params.start}`
     );
