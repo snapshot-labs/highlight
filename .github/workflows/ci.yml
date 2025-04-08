@@ -1,0 +1,27 @@
+name: Lint, test, build
+
+on: [push]
+
+jobs:
+  lint_test_build:
+    strategy:
+      matrix:
+        node-version: ['22.x', '23.x']
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Lint
+        run: yarn lint
+      - name: Run tests
+        run: yarn test
+      - name: Build
+        run: yarn build
