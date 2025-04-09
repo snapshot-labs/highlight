@@ -22,7 +22,7 @@ export default class Agent {
     const handlerName = parsed.name;
     const parsedArgs = parsed.args.map(arg => {
       if (arg._isBigNumber) {
-        return arg.toNumber();
+        return arg.toBigInt();
       }
 
       return arg;
