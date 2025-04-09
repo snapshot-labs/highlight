@@ -13,8 +13,8 @@ export default class Aliases extends Agent {
   async setAlias(
     from: string,
     alias: string,
-    timestamp: number,
-    salt: string,
+    timestamp: bigint,
+    salt: bigint,
     signature: string
   ) {
     const recoveredAddress = await verifySignature(
@@ -33,6 +33,11 @@ export default class Aliases extends Agent {
     this.assert(saltAlreadyUsed === false, 'Salt already used');
 
     this.write(`salts:${salt}`, true);
-    this.emit('setAlias', [from, alias]);
+    this.emit('setAlias', [
+      from,
+      alias,
+      `0x${timestamp.toString(16)}`,
+      `0x${salt.toString(16)}`
+    ]);
   }
 }

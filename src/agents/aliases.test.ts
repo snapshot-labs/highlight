@@ -23,7 +23,9 @@ function getSalt() {
   const buffer = new Uint8Array(32);
   crypto.getRandomValues(buffer);
 
-  return `0x${buffer.reduce((acc, val) => acc + val.toString(16).padStart(2, '0'), '')}`;
+  return BigInt(
+    `0x${buffer.reduce((acc, val) => acc + val.toString(16).padStart(2, '0'), '')}`
+  );
 }
 
 it('should allow alias if signature is valid', async () => {
@@ -35,7 +37,7 @@ it('should allow alias if signature is valid', async () => {
   const message = {
     from,
     alias: '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70',
-    timestamp: 1744209444,
+    timestamp: 1744209444n,
     salt: getSalt()
   };
 
@@ -54,7 +56,12 @@ it('should allow alias if signature is valid', async () => {
   expect(process.events).toEqual([
     {
       agent: 'aliases',
-      data: [from, '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70'],
+      data: [
+        from,
+        '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70',
+        '0x67f68624',
+        `0x${message.salt.toString(16)}`
+      ],
       key: 'setAlias'
     }
   ]);
@@ -69,7 +76,7 @@ it('should throw if signature is invalid', async () => {
   const message = {
     from,
     alias: '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70',
-    timestamp: 1744209444,
+    timestamp: 1744209444n,
     salt: getSalt()
   };
 
@@ -98,7 +105,7 @@ it('should throw if salt is reused', async () => {
   const message = {
     from,
     alias: '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70',
-    timestamp: 1744209444,
+    timestamp: 1744209444n,
     salt: getSalt()
   };
 

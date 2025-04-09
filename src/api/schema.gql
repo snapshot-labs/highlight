@@ -2,4 +2,5 @@ type Alias {
   id: String!
   address: String!
   alias: String!
+  created: Int!
 }
