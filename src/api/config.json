@@ -1,76 +1,10 @@
 {
   "network_node_url": "http://localhost:3001",
-  "disable_checkpoints": true,
   "sources": [
     {
-      "contract": "discussions",
+      "contract": "aliases",
       "start": 1,
-      "events": [
-        {
-          "name": "add_category",
-          "fn": "handleAddCategory"
-        },
-        {
-          "name": "edit_category",
-          "fn": "handleEditCategory"
-        },
-        {
-          "name": "remove_category",
-          "fn": "handleRemoveCategory"
-        },
-        {
-          "name": "add_topic",
-          "fn": "handleAddTopic"
-        },
-        {
-          "name": "edit_topic",
-          "fn": "handleEditTopic"
-        },
-        {
-          "name": "remove_topic",
-          "fn": "handleRemoveTopic"
-        },
-        {
-          "name": "pin_topic",
-          "fn": "handlePinTopic"
-        },
-        {
-          "name": "unpin_topic",
-          "fn": "handleUnpinTopic"
-        },
-        {
-          "name": "vote",
-          "fn": "handleTopicVote"
-        },
-        {
-          "name": "unvote",
-          "fn": "handleTopicUnvote"
-        }
-      ]
-    },
-    {
-      "contract": "profiles",
-      "start": 1,
-      "events": [
-        {
-          "name": "set_profile",
-          "fn": "handleSetProfile"
-        },
-        {
-          "name": "set_statement",
-          "fn": "handleSetStatement"
-        }
-      ]
-    },
-    {
-      "contract": "votes",
-      "start": 1,
-      "events": [
-        {
-          "name": "vote",
-          "fn": "handleVote"
-        }
-      ]
+      "events": []
     }
   ]
 }
