@@ -17,13 +17,8 @@
   "prettier": "@snapshot-labs/prettier-config",
   "dependencies": {
     "@ethersproject/abi": "^5.7.0",
-    "@ethersproject/address": "^5.7.0",
-    "@ethersproject/bignumber": "^5.7.0",
-    "@ethersproject/bytes": "^5.7.0",
     "@ethersproject/contracts": "^5.7.0",
-    "@ethersproject/keccak256": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
-    "@ethersproject/transactions": "^5.7.0",
     "@snapshot-labs/checkpoint": "^0.1.0-beta.57",
     "async-lock": "^1.4.0",
     "change-case": "^4.1.0",
