@@ -4,7 +4,6 @@ import Checkpoint, { LogLevel } from '@snapshot-labs/checkpoint';
 import config from './config.json';
 import { HighlightIndexer } from './indexer';
 import overrides from './overrides.json';
-import * as writers from './writer';
 
 const dir = __dirname.endsWith('dist/src/api') ? '../' : '';
 const schemaFile = path.join(__dirname, `${dir}../../src/api/schema.gql`);
@@ -21,7 +20,7 @@ export const checkpoint = new Checkpoint(schema, {
   overridesConfig: overrides
 });
 
-const highlightIndexer = new HighlightIndexer(writers);
+const highlightIndexer = new HighlightIndexer({});
 checkpoint.addIndexer('highlight', config, highlightIndexer);
 
 async function start() {
