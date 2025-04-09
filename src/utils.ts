@@ -1,21 +1,6 @@
-import { keccak256 } from '@ethersproject/keccak256';
-import { serialize } from '@ethersproject/transactions';
 import { Response } from 'express';
-import { Unit } from './highlight/types';
 
 export const IPFS_GATEWAY = process.env.IPFS_GATEWAY || 'pineapple.fyi';
-
-/**
- * Computes hash for unit. Hash of unit is exclusively dependent on txData and signature
- * so it's compatible with Ethers.js provider (submitted txId and returned txId needs to be the same)
- * @param unit Unit
- * @returns Unit hash
- */
-export function computeUnitHash(unit: Unit) {
-  const serializedTx = serialize(unit.txData, unit.signature);
-
-  return keccak256(serializedTx);
-}
 
 export function getUrl(uri: string, gateway = IPFS_GATEWAY) {
   const ipfsGateway = `https://${gateway}`;

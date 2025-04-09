@@ -1,30 +1,17 @@
-import { BigNumberish } from '@ethersproject/bignumber';
-import { SignatureLike } from '@ethersproject/bytes';
-
 export interface PostJointRequest {
-  unit: Unit;
+  unit: PendingUnit;
 }
 
-export interface TxData {
-  type?: number | null;
-  chainId: number;
-  nonce: number;
-  maxPriorityFeePerGas?: BigNumberish;
-  maxFeePerGas?: BigNumberish;
-  gasLimit: BigNumberish;
-  to?: string;
-  value: BigNumberish;
-  data: string;
-}
-
-export interface Unit {
-  unit_hash: string;
+export type Unit = {
+  id: number;
   version: string;
-  sender_address: string;
   timestamp: number;
-  txData: TxData;
-  signature: SignatureLike;
-}
+  senderAddress: string;
+  toAddress: string;
+  data: string;
+};
+
+export type PendingUnit = Omit<Unit, 'id'>;
 
 export interface GetEventsRequest {
   start: number;
@@ -32,7 +19,7 @@ export interface GetEventsRequest {
 }
 
 export interface GetUnitReceiptRequest {
-  hash: string;
+  id: number;
 }
 
 export interface Storage {

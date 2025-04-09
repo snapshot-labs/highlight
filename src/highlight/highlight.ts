@@ -6,7 +6,8 @@ import {
   Event,
   GetEventsRequest,
   GetUnitReceiptRequest,
-  PostJointRequest
+  PostJointRequest,
+  Unit
 } from './types';
 
 type AgentGetter = (process: Process) => Agent;
@@ -32,24 +33,12 @@ export default class Highlight {
   }
 
   async _postJoint(params: PostJointRequest) {
-    const unitRaw: any = structuredClone(params.unit);
-    delete unitRaw.unit_hash;
-    delete unitRaw.signature;
-
     let execution;
     let steps = 0;
 
-    if (!params.unit.txData.to) {
-      throw new Error('Missing to address');
-    }
-
     const process = new Process({ adapter: this.adapter });
     try {
-      await this.invoke(
-        process,
-        params.unit.txData.to,
-        params.unit.txData.data
-      );
+      await this.invoke(process, params.unit.toAddress, params.unit.data);
 
       execution = await process.execute();
       steps = process.steps;
@@ -60,18 +49,21 @@ export default class Highlight {
 
     let id = (await this.adapter.get('units:id')) || 0;
 
+    const unit: Unit = {
+      id,
+      ...params.unit
+    };
+
     id++;
     const multi = this.adapter.multi();
-    multi.incr(`sender_txs_count:${params.unit.sender_address}`);
-    multi.set(`unit:${id}`, params.unit);
+    multi.set(`unit:${id}`, unit);
     multi.set(`unit_events:${id}`, execution.events);
-    multi.set(`units_map:${params.unit.unit_hash}`, id);
     multi.set('units:id', id);
 
     await multi.exec();
 
     return {
-      joint: params,
+      joint: { unit },
       events: execution.events || [],
       unit_id: id,
       last_event_id: execution.last_event_id,
@@ -96,11 +88,12 @@ export default class Highlight {
   }
 
   async getUnitReceipt(params: GetUnitReceiptRequest) {
-    const unitId = await this.adapter.get(`units_map:${params.hash}`);
-    const events: Event[] = await this.adapter.get(`unit_events:${unitId}`);
+    const events: Event[] | undefined = await this.adapter.get(
+      `unit_events:${params.id}`
+    );
 
     return {
-      events: events.filter(event => event !== null)
+      events: events?.filter(event => event !== null) ?? []
     };
   }
 
