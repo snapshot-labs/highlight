@@ -44,7 +44,16 @@ it('should allow alias if signature is valid', async () => {
     aliases.setAlias(from, message.alias, message.salt, signature)
   ).resolves.toBeUndefined();
 
-  expect(process.events).toHaveLength(1);
+  expect(process.events).toMatchInlineSnapshot([
+    {
+      agent: 'aliases',
+      data: [
+        '0x8E2E3A9077712A1Ce072F95f1DDe62210dd0A0EC',
+        '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70'
+      ],
+      key: 'setAlias'
+    }
+  ]);
 });
 
 it('should throw if signature is invalid', async () => {

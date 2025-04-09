@@ -25,6 +25,6 @@ export default class Aliases extends Agent {
     this.assert(saltAlreadyUsed === false, 'Salt already used');
 
     this.write(`salts:${salt}`, true);
-    this.emit('setAlias', []);
+    this.emit('setAlias', [from, alias]);
   }
 }
