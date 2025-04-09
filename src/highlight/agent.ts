@@ -38,7 +38,7 @@ export default class Agent {
   }
 
   assert(condition: unknown, e: string) {
-    if (condition) throw new Error(e);
+    if (!condition) throw new Error(e);
   }
 
   async has(key: string) {
