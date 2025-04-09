@@ -1,1 +1,3 @@
-["function setAlias()"]
+[
+  "function setAlias(address from, address alias, salt uint256, signature bytes)"
+]

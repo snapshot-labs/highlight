@@ -16,8 +16,10 @@
   },
   "prettier": "@snapshot-labs/prettier-config",
   "dependencies": {
-    "@ethersproject/abi": "^5.7.0",
-    "@ethersproject/providers": "^5.7.2",
+    "@ethersproject/abi": "^5.8.0",
+    "@ethersproject/abstract-signer": "^5.8.0",
+    "@ethersproject/providers": "^5.8.0",
+    "@ethersproject/wallet": "^5.8.0",
     "@snapshot-labs/checkpoint": "^0.1.0-beta.57",
     "async-lock": "^1.4.0",
     "change-case": "^4.1.0",
