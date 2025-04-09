@@ -19,9 +19,12 @@ export default class Aliases extends Agent {
       },
       signature
     );
-
     this.assert(recoveredAddress === from, 'Invalid signature');
 
+    const saltAlreadyUsed = await this.has(`salts:${salt}`);
+    this.assert(saltAlreadyUsed === false, 'Salt already used');
+
+    this.write(`salts:${salt}`, true);
     this.emit('setAlias', []);
   }
 }
