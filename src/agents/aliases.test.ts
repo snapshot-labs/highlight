@@ -27,7 +27,7 @@ function getSalt() {
 }
 
 it('should allow alias if signature is valid', async () => {
-  const process = new Process({ adapter: adapter });
+  const process = new Process({ adapter });
   const aliases = new Aliases('aliases', process, AliasesAbi);
 
   const from = await wallet.getAddress();
@@ -48,7 +48,7 @@ it('should allow alias if signature is valid', async () => {
 });
 
 it('should throw if signature is invalid', async () => {
-  const process = new Process({ adapter: adapter });
+  const process = new Process({ adapter });
   const aliases = new Aliases('aliases', process, AliasesAbi);
 
   const from = await wallet.getAddress();
