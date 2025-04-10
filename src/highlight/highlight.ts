@@ -27,19 +27,13 @@ export default class Highlight {
   }
 
   async _postJoint(params: PostJointRequest) {
-    let execution;
     let steps = 0;
 
     const process = new Process({ adapter: this.adapter });
-    try {
-      await this.invoke(process, params.unit.toAddress, params.unit.data);
+    await this.invoke(process, params.unit.toAddress, params.unit.data);
 
-      execution = await process.execute();
-      steps = process.steps;
-    } catch (e) {
-      console.log(e);
-      throw e;
-    }
+    const execution = await process.execute();
+    steps = process.steps;
 
     let id: number = (await this.adapter.get('units:id')) || 0;
 
