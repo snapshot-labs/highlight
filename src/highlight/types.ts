@@ -31,5 +31,5 @@ export interface DeleteStorage {
 export type Event = {
   agent: string;
   key: string;
-  data: any[];
+  data: unknown[];
 };
