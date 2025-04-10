@@ -37,20 +37,13 @@ it('should allow alias if signature is valid', async () => {
   const message = {
     from,
     alias: '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70',
-    timestamp: 1744209444n,
     salt: getSalt()
   };
 
   const signature = await signMessage(wallet, SET_ALIAS_TYPES, message);
 
   await expect(
-    aliases.setAlias(
-      from,
-      message.alias,
-      message.timestamp,
-      message.salt,
-      signature
-    )
+    aliases.setAlias(from, message.alias, message.salt, signature)
   ).resolves.toBeUndefined();
 
   expect(process.events).toEqual([
@@ -59,7 +52,6 @@ it('should allow alias if signature is valid', async () => {
       data: [
         from,
         '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70',
-        '0x67f68624',
         `0x${message.salt.toString(16)}`
       ],
       key: 'setAlias'
@@ -76,7 +68,6 @@ it('should throw if signature is invalid', async () => {
   const message = {
     from,
     alias: '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70',
-    timestamp: 1744209444n,
     salt: getSalt()
   };
 
@@ -84,13 +75,7 @@ it('should throw if signature is invalid', async () => {
     '0x8b44096237326cc5e9c67f6c847a46f8715945d216269d63e6bc09712d91ba7b48e8ceef2d1c62b37debeda708e6bd1f0a5d5822cd88273830599e51d9d8b78c1b';
 
   await expect(
-    aliases.setAlias(
-      from,
-      message.alias,
-      message.timestamp,
-      message.salt,
-      signature
-    )
+    aliases.setAlias(from, message.alias, message.salt, signature)
   ).rejects.toThrow('Invalid signature');
 
   expect(process.events).toHaveLength(0);
@@ -112,25 +97,13 @@ it('should throw if salt is reused', async () => {
   const signature = await signMessage(wallet, SET_ALIAS_TYPES, message);
 
   await expect(
-    aliases.setAlias(
-      from,
-      message.alias,
-      message.timestamp,
-      message.salt,
-      signature
-    )
+    aliases.setAlias(from, message.alias, message.salt, signature)
   ).resolves.toBeUndefined();
 
   expect(process.events).toHaveLength(1);
 
   await expect(
-    aliases.setAlias(
-      from,
-      message.alias,
-      message.timestamp,
-      message.salt,
-      signature
-    )
+    aliases.setAlias(from, message.alias, message.salt, signature)
   ).rejects.toThrow('Salt already used');
 
   expect(process.events).toHaveLength(1);

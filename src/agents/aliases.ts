@@ -5,24 +5,16 @@ export const SET_ALIAS_TYPES = {
   Alias: [
     { name: 'from', type: 'address' },
     { name: 'alias', type: 'address' },
-    { name: 'timestamp', type: 'uint64' },
     { name: 'salt', type: 'uint256' }
   ]
 };
 export default class Aliases extends Agent {
-  async setAlias(
-    from: string,
-    alias: string,
-    timestamp: bigint,
-    salt: bigint,
-    signature: string
-  ) {
+  async setAlias(from: string, alias: string, salt: bigint, signature: string) {
     const recoveredAddress = await verifySignature(
       SET_ALIAS_TYPES,
       {
         from,
         alias,
-        timestamp,
         salt
       },
       signature
@@ -33,11 +25,6 @@ export default class Aliases extends Agent {
     this.assert(saltAlreadyUsed === false, 'Salt already used');
 
     this.write(`salts:${salt}`, true);
-    this.emit('setAlias', [
-      from,
-      alias,
-      `0x${timestamp.toString(16)}`,
-      `0x${salt.toString(16)}`
-    ]);
+    this.emit('setAlias', [from, alias, `0x${salt.toString(16)}`]);
   }
 }

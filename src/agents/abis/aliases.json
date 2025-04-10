@@ -1,3 +1,3 @@
 [
-  "function setAlias(address from, address alias, uint64 timestamp, uint256 salt, bytes signature)"
+  "function setAlias(address from, address alias, uint256 salt, bytes signature)"
 ]
