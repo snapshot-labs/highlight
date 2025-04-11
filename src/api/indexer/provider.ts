@@ -1,6 +1,6 @@
 import { BaseProvider, BlockNotFoundError } from '@snapshot-labs/checkpoint';
 import { Writer } from './types';
-import { Event } from '../../highlight/types';
+import { Event, Unit } from '../../highlight/types';
 import { highlight } from '../../rpc';
 
 export let lastIndexedMci = 0;
@@ -38,45 +38,45 @@ export class HighlightProvider extends BaseProvider {
   }
 
   async processBlock(blockNumber: number) {
-    let events: Event[];
-    let lastMci: number;
+    let receipt: { unit: Unit; events: Event[] };
     try {
-      const endBlockNum = blockNumber + 10;
-      events = await highlight.getEvents({
-        start: blockNumber,
-        end: endBlockNum
+      receipt = await highlight.getUnitReceipt({
+        id: blockNumber
       });
-
-      lastMci = events[events.length - 1].id;
     } catch {
       throw new BlockNotFoundError();
     }
 
     try {
-      await this.handleBlock(blockNumber, events);
-      await this.instance.setLastIndexedBlock(lastMci);
+      await this.handleBlock(blockNumber, receipt.unit, receipt.events);
+      await this.instance.setLastIndexedBlock(blockNumber);
     } catch (e) {
       console.log('error when handling block', e);
       throw e;
     }
 
-    lastIndexedMci = lastMci;
+    lastIndexedMci = blockNumber;
 
-    return lastMci + 1;
+    return blockNumber + 1;
   }
 
-  private async handleBlock(blockNumber: number, events: Event[]) {
+  private async handleBlock(blockNumber: number, unit: Unit, events: Event[]) {
     this.log.info({ blockNumber }, 'handling block');
 
-    for (const event of events) {
-      await this.handleEvent(blockNumber, event);
+    for (const [eventIndex, event] of events.entries()) {
+      await this.handleEvent(blockNumber, unit, eventIndex, event);
     }
 
     this.log.debug({ blockNumber }, 'handling block done');
   }
 
-  private async handleEvent(blockNumber: number, event: Event) {
-    this.log.debug({ msgIndex: event.id }, 'handling event');
+  private async handleEvent(
+    blockNumber: number,
+    unit: Unit,
+    eventIndex: number,
+    event: Event
+  ) {
+    this.log.debug({ eventIndex }, 'handling event');
 
     const helpers = this.instance.getWriterHelpers();
 
@@ -95,6 +95,7 @@ export class HighlightProvider extends BaseProvider {
           await this.writers[sourceEvent.fn]({
             source,
             blockNumber,
+            unit,
             payload: event,
             helpers
           });
@@ -102,6 +103,6 @@ export class HighlightProvider extends BaseProvider {
       }
     }
 
-    this.log.debug({ msgIndex: event.id }, 'handling event done');
+    this.log.debug({ eventIndex }, 'handling event done');
   }
 }

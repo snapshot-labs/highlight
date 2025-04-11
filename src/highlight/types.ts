@@ -13,11 +13,6 @@ export type Unit = {
 
 export type PendingUnit = Omit<Unit, 'id'>;
 
-export interface GetEventsRequest {
-  start: number;
-  end: number;
-}
-
 export interface GetUnitReceiptRequest {
   id: number;
 }
@@ -34,10 +29,7 @@ export interface DeleteStorage {
 }
 
 export type Event = {
-  id: number;
   agent: string;
   key: string;
   data: any[];
 };
-
-export type PendingEvent = Omit<Event, 'id'>;

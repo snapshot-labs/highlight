@@ -28,16 +28,6 @@ router.post('/', async (req, res) => {
       }
     }
 
-    case 'hl_getEvents': {
-      try {
-        const result = await highlight.getEvents(params);
-
-        return rpcSuccess(res, result, id);
-      } catch (e) {
-        return rpcError(res, 500, -32000, e, id);
-      }
-    }
-
     case 'hl_getUnitReceipt': {
       try {
         const result = await highlight.getUnitReceipt(params);
@@ -63,7 +53,7 @@ router.post('/', async (req, res) => {
 
         const result = await highlight.postJoint({ unit });
 
-        while ((result?.last_event_id as number) > lastIndexedMci) {
+        while (result.unit_id > lastIndexedMci) {
           await sleep(1e2);
         }
 

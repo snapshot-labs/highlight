@@ -1,9 +1,9 @@
 import { Adapter } from './adapter/adapter';
-import { PendingEvent, Storage } from './types';
+import { Event, Storage } from './types';
 
 export default class Process {
   private adapter: Adapter;
-  public events: PendingEvent[] = [];
+  public events: Event[] = [];
   public writes: Storage[] = [];
   public state: Record<string, Record<string, string>> = {};
   public steps = 0;
@@ -12,7 +12,8 @@ export default class Process {
     this.adapter = adapter;
   }
 
-  emit(event: PendingEvent) {
+  emit(event: Event) {
+    this.steps++;
     this.events.push(event);
   }
 
@@ -52,28 +53,11 @@ export default class Process {
       }
     }
 
-    let id = 0;
-    if (this.events.length > 0) {
-      this.steps++;
-      id = (await this.adapter.get('events:id')) || 0;
-
-      for (const event of this.events) {
-        id++;
-        multi.set(`event:${id}`, {
-          id,
-          ...event
-        });
-      }
-      multi.set('events:id', id);
-    }
-
-    if (this.writes.length > 0 || this.events.length > 0) {
-      this.steps++;
+    if (this.writes.length > 0) {
       await multi.exec();
     }
 
     return {
-      last_event_id: id,
       events: this.events
     };
   }

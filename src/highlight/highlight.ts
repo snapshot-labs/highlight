@@ -2,13 +2,7 @@ import AsyncLock from 'async-lock';
 import { Adapter } from './adapter/adapter';
 import Agent from './agent';
 import Process from './process';
-import {
-  Event,
-  GetEventsRequest,
-  GetUnitReceiptRequest,
-  PostJointRequest,
-  Unit
-} from './types';
+import { Event, GetUnitReceiptRequest, PostJointRequest, Unit } from './types';
 
 type AgentGetter = (process: Process) => Agent;
 
@@ -47,7 +41,7 @@ export default class Highlight {
       throw e;
     }
 
-    let id = (await this.adapter.get('units:id')) || 0;
+    let id: number = (await this.adapter.get('units:id')) || 0;
 
     const unit: Unit = {
       id,
@@ -66,7 +60,6 @@ export default class Highlight {
       joint: { unit },
       events: execution.events || [],
       unit_id: id,
-      last_event_id: execution.last_event_id,
       steps
     };
   }
@@ -78,27 +71,25 @@ export default class Highlight {
     return agent.invoke(data);
   }
 
-  async getEvents(params: GetEventsRequest): Promise<Event[]> {
-    const keys = [...Array(params.end - params.start).keys()].map(
-      (key, i) => `event:${i + params.start}`
-    );
-    const events: Event[] = await this.adapter.mget(keys);
-
-    return events.filter(event => event !== null);
-  }
-
   async getUnitReceipt(params: GetUnitReceiptRequest) {
-    const events: Event[] | undefined = await this.adapter.get(
-      `unit_events:${params.id}`
-    );
+    const [unit, events]: [Unit | undefined, Event[] | undefined] =
+      await Promise.all([
+        this.adapter.get(`unit:${params.id}`),
+        this.adapter.get(`unit_events:${params.id}`)
+      ]);
+
+    if (!unit) {
+      throw new Error(`Unit ${params.id} not found`);
+    }
 
     return {
+      unit,
       events: events?.filter(event => event !== null) ?? []
     };
   }
 
   async getMci() {
-    return await this.adapter.get('events:id');
+    return await this.adapter.get('units:id');
   }
 
   async reset() {
