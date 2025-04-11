@@ -3,9 +3,9 @@ import { Alias } from '../../.checkpoint/models';
 
 export function createWriters(indexerName: string) {
   const handleSetAlias: Writer = async ({ unit, payload }) => {
-    const [from, to, salt] = payload.data;
+    const [from, to] = payload.data;
 
-    const alias = new Alias(salt, indexerName);
+    const alias = new Alias(`${from}:${to}`, indexerName);
     alias.address = from;
     alias.alias = to;
     alias.created = unit.timestamp;
