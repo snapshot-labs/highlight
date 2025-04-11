@@ -1,9 +1,9 @@
 import { BaseWriterParams } from '@snapshot-labs/checkpoint';
-import { Unit } from '../../highlight/types';
+import { Event, Unit } from '../../highlight/types';
 
 export type Writer = (
   args: {
     unit: Unit;
-    payload: any;
+    payload: Event;
   } & BaseWriterParams
 ) => Promise<void>;
