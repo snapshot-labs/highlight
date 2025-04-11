@@ -89,7 +89,7 @@ it('should throw if salt is reused', async () => {
 
   const message = {
     from,
-    alias: '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70',
+    alias: '0xEDeF22EA0505C7296D24109bD90001668493777D',
     timestamp: 1744209444n,
     salt: getSalt()
   };
@@ -105,6 +105,37 @@ it('should throw if salt is reused', async () => {
   await expect(
     aliases.setAlias(from, message.alias, message.salt, signature)
   ).rejects.toThrow('Salt already used');
+
+  expect(process.events).toHaveLength(1);
+});
+
+it('should throw if alias is reused', async () => {
+  const process = new Process({ adapter });
+  const aliases = new Aliases('aliases', process, AliasesAbi);
+
+  const from = await wallet.getAddress();
+
+  const message = {
+    from,
+    alias: '0x9905a3A1bAE3b10AD163Bb3735aE87cd70b84eC4',
+    timestamp: 1744209444n,
+    salt: getSalt()
+  };
+
+  let signature = await signMessage(wallet, SET_ALIAS_TYPES, message);
+
+  await expect(
+    aliases.setAlias(from, message.alias, message.salt, signature)
+  ).resolves.toBeUndefined();
+
+  expect(process.events).toHaveLength(1);
+
+  message.salt = getSalt();
+  signature = await signMessage(wallet, SET_ALIAS_TYPES, message);
+
+  await expect(
+    aliases.setAlias(from, message.alias, message.salt, signature)
+  ).rejects.toThrow('Alias already exists');
 
   expect(process.events).toHaveLength(1);
 });

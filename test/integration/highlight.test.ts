@@ -76,7 +76,7 @@ describe('setAlias', () => {
           key: 'setAlias'
         }
       ],
-      steps: 3,
+      steps: 5,
       unit_id: 1
     });
   });
@@ -92,6 +92,20 @@ describe('setAlias', () => {
 
     await expect(highlight.postJoint({ unit })).rejects.toThrow(
       'Salt already used'
+    );
+  });
+
+  it('should throw when alias is reused', async () => {
+    const message = {
+      from: await wallet.getAddress(),
+      alias: '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70',
+      salt: '0x1'
+    };
+
+    const unit = await getUnit(message);
+
+    await expect(highlight.postJoint({ unit })).rejects.toThrow(
+      'Alias already exists'
     );
   });
 
