@@ -4,7 +4,12 @@
     {
       "contract": "aliases",
       "start": 1,
-      "events": []
+      "events": [
+        {
+          "name": "setAlias",
+          "fn": "handleSetAlias"
+        }
+      ]
     }
   ]
 }

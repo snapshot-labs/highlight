@@ -22,7 +22,6 @@
     "@ethersproject/wallet": "^5.8.0",
     "@snapshot-labs/checkpoint": "^0.1.0-beta.57",
     "async-lock": "^1.4.0",
-    "change-case": "^4.1.0",
     "connection-string": "^1.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.1",

@@ -9,7 +9,7 @@ export const SET_ALIAS_TYPES = {
   ]
 };
 export default class Aliases extends Agent {
-  async setAlias(from: string, alias: string, salt: string, signature: string) {
+  async setAlias(from: string, alias: string, salt: bigint, signature: string) {
     const recoveredAddress = await verifySignature(
       SET_ALIAS_TYPES,
       {
@@ -19,9 +19,16 @@ export default class Aliases extends Agent {
       },
       signature
     );
-
     this.assert(recoveredAddress === from, 'Invalid signature');
 
-    this.emit('setAlias', []);
+    const saltAlreadyUsed = await this.has(`salts:${salt}`);
+    this.assert(saltAlreadyUsed === false, 'Salt already used');
+
+    const aliasAlreadyExists = await this.has(`aliases:${from}-${alias}`);
+    this.assert(aliasAlreadyExists === false, 'Alias already exists');
+
+    this.write(`salts:${salt}`, true);
+    this.write(`aliases:${from}-${alias}`, true);
+    this.emit('setAlias', [from, alias, `0x${salt.toString(16)}`]);
   }
 }

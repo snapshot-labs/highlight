@@ -1,5 +1,4 @@
 import { Interface } from '@ethersproject/abi';
-import * as changeCase from 'change-case';
 import Process from './process';
 
 export default class Agent {
@@ -20,10 +19,10 @@ export default class Agent {
   invoke(data: string) {
     const parsed = this.iface.parseTransaction({ data });
 
-    const handlerName = changeCase.snakeCase(parsed.name);
+    const handlerName = parsed.name;
     const parsedArgs = parsed.args.map(arg => {
       if (arg._isBigNumber) {
-        return arg.toNumber();
+        return arg.toBigInt();
       }
 
       return arg;
