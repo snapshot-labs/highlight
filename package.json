@@ -18,6 +18,8 @@
   "dependencies": {
     "@ethersproject/abi": "^5.8.0",
     "@ethersproject/abstract-signer": "^5.8.0",
+    "@ethersproject/contracts": "^5.8.0",
+    "@ethersproject/hash": "^5.8.0",
     "@ethersproject/providers": "^5.8.0",
     "@ethersproject/wallet": "^5.8.0",
     "@snapshot-labs/checkpoint": "^0.1.0-beta.57",

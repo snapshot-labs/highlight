@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { AGENTS_MAP } from '../../src/agents';
 import AliasesAbi from '../../src/agents/abis/aliases.json';
 import { SET_ALIAS_TYPES } from '../../src/agents/aliases';
-import { signMessage } from '../../src/agents/utils/eip712';
+import { signMessage } from '../../src/agents/utils/signatures';
 import { MemoryAdapter } from '../../src/highlight/adapter/memory';
 import Highlight from '../../src/highlight/highlight';
 import { PendingUnit } from '../../src/highlight/types';
