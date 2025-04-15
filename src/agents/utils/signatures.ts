@@ -2,7 +2,7 @@ import {
   TypedDataDomain,
   TypedDataField
 } from '@ethersproject/abstract-signer';
-import { Contract } from '@ethersproject/contracts';
+import { Contract, ContractInterface } from '@ethersproject/contracts';
 import { _TypedDataEncoder } from '@ethersproject/hash';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { verifyTypedData, Wallet } from '@ethersproject/wallet';
@@ -27,10 +27,14 @@ const EVM_TYPED_DATA_CHAIN_ID = parseInt(
   process.env.TYPED_DATA_CHAIN_ID ?? '11155111'
 );
 
-const ERC1271ABI = [
+const ERC1271_ABI = [
   'function isValidSignature(bytes32 _hash, bytes memory _signature) public view returns (bytes4 magicValue)'
 ];
+const ERC1271_ABI_OLD = [
+  'function isValidSignature(bytes _hash, bytes memory _signature) public view returns (bytes4 magicValue)'
+];
 const ERC1271_MAGIC_VALUE = '0x1626ba7e';
+const ERC1271_MAGIC_VALUE_OLD = '0x20c13b0b';
 
 const BASE_DOMAIN: TypedDataDomain = {
   name: 'highlight',
@@ -102,24 +106,40 @@ export const verifyEip1271Signature: SignatureVerifier = async (
 ) => {
   const hash = getHash(chainId, salt, types, message);
 
-  return verifyDefault(address, signature, hash, provider);
+  const params = [address, signature, hash] as const;
+
+  const valid = await verifyEip1271SignatureWithAbi(
+    ERC1271_ABI,
+    ERC1271_MAGIC_VALUE,
+    ...params
+  );
+  if (valid) return true;
+
+  const validOld = await verifyEip1271SignatureWithAbi(
+    ERC1271_ABI_OLD,
+    ERC1271_MAGIC_VALUE_OLD,
+    ...params
+  );
+  if (validOld) return true;
+  return false;
 };
 
-async function verifyDefault(
+async function verifyEip1271SignatureWithAbi(
+  abi: ContractInterface,
+  magicValue: string,
   address: string,
   sig: string,
-  hash: string,
-  provider: StaticJsonRpcProvider
+  hash: string
 ): Promise<boolean> {
   let returnValue: string;
   try {
-    const contract = new Contract(address, ERC1271ABI, provider);
+    const contract = new Contract(address, abi, provider);
     returnValue = await contract.isValidSignature(hash, sig);
   } catch {
     return false;
   }
 
-  return returnValue === ERC1271_MAGIC_VALUE;
+  return returnValue === magicValue;
 }
 
 export async function verifySignature(
