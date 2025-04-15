@@ -46,6 +46,10 @@ const provider = new StaticJsonRpcProvider(
   EVM_TYPED_DATA_CHAIN_ID
 );
 
+function isEqual(a: string, b: string): boolean {
+  return a.toLowerCase() === b.toLowerCase();
+}
+
 function getHash(
   chainId: Required<TypedDataDomain['chainId']>,
   salt: string,
@@ -93,7 +97,7 @@ export const verifyEcdsaSignature: SignatureVerifier = async (
 
   const recoveredAddress = verifyTypedData(domain, types, message, signature);
 
-  return recoveredAddress === address;
+  return isEqual(recoveredAddress, address);
 };
 
 export const verifyEip1271Signature: SignatureVerifier = async (
@@ -139,7 +143,7 @@ async function verifyEip1271SignatureWithAbi(
     return false;
   }
 
-  return returnValue === magicValue;
+  return isEqual(returnValue, magicValue);
 }
 
 export async function verifySignature(
