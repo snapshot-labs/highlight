@@ -1,3 +1,3 @@
 [
-  "function setAlias(address from, address alias, uint256 salt, bytes signature)"
+  "function setAlias(uint chainId, bytes32 salt, address from, address alias, bytes signature)"
 ]
