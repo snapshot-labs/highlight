@@ -1,5 +1,5 @@
 import Agent from '../highlight/agent';
-import { verifySignature } from './utils/eip712';
+import { verifySignature } from './utils/signatures';
 
 export const SET_ALIAS_TYPES = {
   Alias: [
@@ -15,17 +15,19 @@ export default class Aliases extends Agent {
     alias: string,
     signature: string
   ) {
-    const recoveredAddress = await verifySignature(
+    const isSignatureValid = await verifySignature(
       chainId,
       salt,
+      from,
       SET_ALIAS_TYPES,
       {
         from,
         alias
       },
-      signature
+      signature,
+      { ecdsa: true, eip1271: true }
     );
-    this.assert(recoveredAddress === from, 'Invalid signature');
+    this.assert(isSignatureValid, 'Invalid signature');
 
     const saltAlreadyUsed = await this.has(`salts:${salt}`);
     this.assert(saltAlreadyUsed === false, 'Salt already used');
