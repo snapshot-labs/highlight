@@ -8,7 +8,7 @@ import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { verifyTypedData, Wallet } from '@ethersproject/wallet';
 
 type SignatureVerifier = (
-  chainId: Required<TypedDataDomain['chainId']>,
+  chainId: number | string,
   salt: string,
   address: string,
   types: Record<string, TypedDataField[]>,
@@ -23,10 +23,6 @@ type VerifyOptions = {
   eip1271?: boolean;
 };
 
-const EVM_TYPED_DATA_CHAIN_ID = parseInt(
-  process.env.TYPED_DATA_CHAIN_ID ?? '11155111'
-);
-
 const ERC1271_ABI = [
   'function isValidSignature(bytes32 _hash, bytes memory _signature) public view returns (bytes4 magicValue)'
 ];
@@ -40,11 +36,6 @@ const BASE_DOMAIN: TypedDataDomain = {
   name: 'highlight',
   version: '0.1.0'
 };
-
-const provider = new StaticJsonRpcProvider(
-  `https://rpc.snapshot.org/${EVM_TYPED_DATA_CHAIN_ID}`,
-  EVM_TYPED_DATA_CHAIN_ID
-);
 
 function isEqual(a: string, b: string): boolean {
   return a.toLowerCase() === b.toLowerCase();
@@ -113,6 +104,7 @@ export const verifyEip1271Signature: SignatureVerifier = async (
   const params = [address, signature, hash] as const;
 
   const valid = await verifyEip1271SignatureWithAbi(
+    chainId,
     ERC1271_ABI,
     ERC1271_MAGIC_VALUE,
     ...params
@@ -120,6 +112,7 @@ export const verifyEip1271Signature: SignatureVerifier = async (
   if (valid) return true;
 
   const validOld = await verifyEip1271SignatureWithAbi(
+    chainId,
     ERC1271_ABI_OLD,
     ERC1271_MAGIC_VALUE_OLD,
     ...params
@@ -129,6 +122,7 @@ export const verifyEip1271Signature: SignatureVerifier = async (
 };
 
 async function verifyEip1271SignatureWithAbi(
+  chainId: number | string,
   abi: ContractInterface,
   magicValue: string,
   address: string,
@@ -137,6 +131,11 @@ async function verifyEip1271SignatureWithAbi(
 ): Promise<boolean> {
   let returnValue: string;
   try {
+    const provider = new StaticJsonRpcProvider(
+      `https://rpc.snapshot.org/${chainId}`,
+      chainId
+    );
+
     const contract = new Contract(address, abi, provider);
     returnValue = await contract.isValidSignature(hash, sig);
   } catch {
@@ -147,7 +146,7 @@ async function verifyEip1271SignatureWithAbi(
 }
 
 export async function verifySignature(
-  chainId: Required<TypedDataDomain['chainId']>,
+  chainId: number | string,
   salt: string,
   address: string,
   types: Record<string, TypedDataField[]>,
