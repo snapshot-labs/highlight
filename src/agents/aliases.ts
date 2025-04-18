@@ -4,18 +4,24 @@ import { verifySignature } from './utils/eip712';
 export const SET_ALIAS_TYPES = {
   Alias: [
     { name: 'from', type: 'address' },
-    { name: 'alias', type: 'address' },
-    { name: 'salt', type: 'uint256' }
+    { name: 'alias', type: 'address' }
   ]
 };
 export default class Aliases extends Agent {
-  async setAlias(from: string, alias: string, salt: bigint, signature: string) {
+  async setAlias(
+    chainId: string,
+    salt: string,
+    from: string,
+    alias: string,
+    signature: string
+  ) {
     const recoveredAddress = await verifySignature(
+      chainId,
+      salt,
       SET_ALIAS_TYPES,
       {
         from,
-        alias,
-        salt
+        alias
       },
       signature
     );
@@ -29,6 +35,6 @@ export default class Aliases extends Agent {
 
     this.write(`salts:${salt}`, true);
     this.write(`aliases:${from}-${alias}`, true);
-    this.emit('setAlias', [from, alias, `0x${salt.toString(16)}`]);
+    this.emit('setAlias', [from, alias, salt]);
   }
 }
