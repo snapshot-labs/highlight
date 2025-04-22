@@ -5,7 +5,7 @@ import { MemoryAdapter } from '../highlight/adapter/memory';
 import Process from '../highlight/process';
 import AliasesAbi from './abis/aliases.json';
 import Aliases, { SET_ALIAS_TYPES } from './aliases';
-import { signMessage } from './utils/eip712';
+import { signMessage } from './utils/signatures';
 
 const CHAIN_ID = '11155111';
 
