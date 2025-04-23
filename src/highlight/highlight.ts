@@ -2,7 +2,12 @@ import AsyncLock from 'async-lock';
 import { Adapter } from './adapter/adapter';
 import Agent from './agent';
 import Process from './process';
-import { Event, GetUnitReceiptRequest, PostJointRequest, Unit } from './types';
+import {
+  Event,
+  GetUnitReceiptRequest,
+  PostMessageRequest,
+  Unit
+} from './types';
 
 type AgentGetter = (process: Process) => Agent;
 
@@ -22,15 +27,22 @@ export default class Highlight {
     this.agents = agents;
   }
 
-  postJoint(params: PostJointRequest) {
-    return this.asyncLock.acquire('postJoint', () => this._postJoint(params));
+  postMessage(request: PostMessageRequest) {
+    return this.asyncLock.acquire('postMessage', () =>
+      this._postMessage(request)
+    );
   }
 
-  async _postJoint(params: PostJointRequest) {
+  async _postMessage(request: PostMessageRequest) {
     let steps = 0;
 
+    const salt = await this.adapter.get(`salts:${request.domain.salt}`);
+    if (salt) {
+      throw new Error('Salt already used');
+    }
+
     const process = new Process({ adapter: this.adapter });
-    await this.invoke(process, params.unit.toAddress, params.unit.data);
+    await this.invoke(process, request);
 
     const execution = await process.execute();
     steps = process.steps;
@@ -39,7 +51,9 @@ export default class Highlight {
 
     const unit: Unit = {
       id,
-      ...params.unit
+      version: '0x1',
+      timestamp: ~~(Date.now() / 1e3),
+      message: request
     };
 
     id++;
@@ -47,6 +61,7 @@ export default class Highlight {
     multi.set(`unit:${id}`, unit);
     multi.set(`unit_events:${id}`, execution.events);
     multi.set('units:id', id);
+    multi.set(`salts:${request.domain.salt}`, true);
 
     await multi.exec();
 
@@ -58,11 +73,12 @@ export default class Highlight {
     };
   }
 
-  async invoke(process: Process, to: string, data: string) {
-    const getAgent = this.agents[to.toLowerCase()];
+  async invoke(process: Process, request: PostMessageRequest) {
+    const getAgent =
+      this.agents[request.domain.verifyingContract.toLowerCase()];
     const agent = getAgent(process);
 
-    return agent.invoke(data);
+    return agent.invoke(request);
   }
 
   async getUnitReceipt(params: GetUnitReceiptRequest) {

@@ -1,39 +1,59 @@
-import { Interface } from '@ethersproject/abi';
+import { TypedDataField } from '@ethersproject/abstract-signer';
 import Process from './process';
+import { BASE_DOMAIN, verifySignature } from './signatures';
+import { PostMessageRequest } from './types';
 
 export default class Agent {
   public id: string;
   public process: Process;
-  public iface: Interface;
+  public entrypoints: Record<string, Record<string, TypedDataField[]>> = {};
 
-  constructor(
-    id: string,
-    process: Process,
-    fragments: ConstructorParameters<typeof Interface>[0]
-  ) {
+  constructor(id: string, process: Process) {
     this.id = id;
     this.process = process;
-    this.iface = new Interface(fragments);
   }
 
-  invoke(data: string) {
-    const parsed = this.iface.parseTransaction({ data });
+  addEntrypoint(name: string, types: Record<string, TypedDataField[]>) {
+    this.entrypoints[name] = types;
+  }
 
-    const handlerName = parsed.name;
-    const parsedArgs = parsed.args.map(arg => {
-      if (arg._isBigNumber) {
-        return arg.toBigInt();
-      }
+  async invoke(request: PostMessageRequest) {
+    const { entrypoint, domain, signer, signature, message } = request;
 
-      return arg;
-    });
-
-    const handler = (this as Record<string, any>)[handlerName];
-    if (typeof handler === 'function') {
-      return handler.bind(this)(...parsedArgs);
+    const entrypointTypes = this.entrypoints[entrypoint];
+    if (!entrypointTypes) {
+      throw new Error(`Entrypoint not found: ${entrypoint}`);
     }
 
-    throw new Error(`Handler not found: ${handlerName}`);
+    const verifyingDomain = {
+      ...BASE_DOMAIN,
+      chainId: domain.chainId,
+      salt: domain.salt.toString(),
+      verifyingContract: domain.verifyingContract
+    };
+
+    const isSignatureValid = await verifySignature(
+      verifyingDomain,
+      signer,
+      entrypointTypes,
+      message,
+      signature,
+      {
+        ecdsa: true,
+        eip1271: true
+      }
+    );
+
+    if (!isSignatureValid) {
+      throw new Error('Invalid signature');
+    }
+
+    const handler = (this as Record<string, any>)[entrypoint];
+    if (typeof handler === 'function') {
+      return handler.bind(this)(message, { domain });
+    }
+
+    throw new Error(`Handler not found: ${entrypoint}`);
   }
 
   assert(condition: unknown, e: string) {

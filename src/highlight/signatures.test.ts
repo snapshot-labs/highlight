@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { verifyEcdsaSignature, verifyEip1271Signature } from './signatures';
-import { SET_ALIAS_TYPES } from '../aliases';
+import { SET_ALIAS_TYPES } from '../agents/aliases';
+
+function createDomain(chainId: number, salt: string) {
+  return {
+    name: 'highlight',
+    version: '0.1.0',
+    chainId,
+    salt,
+    verifyingContract: '0x0000000000000000000000000000000000000001'
+  };
+}
 
 describe('ECDSA', () => {
   it('should return true for valid signature', async () => {
@@ -12,11 +22,10 @@ describe('ECDSA', () => {
     };
 
     const signature =
-      '0xf577a9220b23957e94aa0fdc9a2707522ec881fee5484c2142b744d8a8141887056dd9ff79ea740c9353f8f03f0c5a1cf9ad5a41f70c9d3659cb2f5f9724bc3b1c';
+      '0xf6497f04d464f72e7e628019a60b73b333408f4661cc66c8e476eb4a9210dc966f38c8d20fea33574c8270b26254dceea9379b75f0dbd577efe6429b65278ac61c';
 
     const result = await verifyEcdsaSignature(
-      11155111,
-      salt,
+      createDomain(11155111, salt),
       message.from,
       SET_ALIAS_TYPES,
       message,
@@ -38,8 +47,7 @@ describe('ECDSA', () => {
       '0xee4eca1bbcc10a15f862637a9db6987049be7312b13c55bc6e5b1edc7f567f7062fde75eecfbc1abcd0c2807806b5548008bf8b681bea4f8af4da39c1da1b3471c';
 
     const result = await verifyEcdsaSignature(
-      11155111,
-      salt,
+      createDomain(11155111, salt),
       message.from,
       SET_ALIAS_TYPES,
       message,
@@ -60,11 +68,10 @@ describe('eip1271', () => {
     };
 
     const signature =
-      '0x6b5c3987af94800a607cded216769d78b88ddbead9161aa9288c4e7045b912bd0c486b58c5842710396a1941fcee2fbf4fa6bcc345ca51758a62c88e413031991b';
+      '0x275fc929b1ccbc58fabdb159cc0fc85dca668fe0de82e91b91bbd2cd5f49324802d30cb4db5b90c07f3e57781d90947e0c8c500ee7f17674b1d4e0e7593ebf5c1b';
 
     const result = await verifyEip1271Signature(
-      11155111,
-      salt,
+      createDomain(11155111, salt),
       message.from,
       SET_ALIAS_TYPES,
       message,
@@ -86,8 +93,7 @@ describe('eip1271', () => {
       '0xee4eca1bbcc10a15f862637a9db6987049be7312b13c55bc6e5b1edc7f567f7062fde75eecfbc1abcd0c2807806b5548008bf8b681bea4f8af4da39c1da1b3471c';
 
     const result = await verifyEip1271Signature(
-      11155111,
-      salt,
+      createDomain(11155111, salt),
       message.from,
       SET_ALIAS_TYPES,
       message,

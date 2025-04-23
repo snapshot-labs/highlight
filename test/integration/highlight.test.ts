@@ -1,19 +1,16 @@
-import { Interface } from '@ethersproject/abi';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { Wallet } from '@ethersproject/wallet';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AGENTS_MAP } from '../../src/agents';
-import AliasesAbi from '../../src/agents/abis/aliases.json';
 import { SET_ALIAS_TYPES } from '../../src/agents/aliases';
-import { signMessage } from '../../src/agents/utils/signatures';
 import { MemoryAdapter } from '../../src/highlight/adapter/memory';
 import Highlight from '../../src/highlight/highlight';
-import { PendingUnit } from '../../src/highlight/types';
+import { BASE_DOMAIN } from '../../src/highlight/signatures';
+import { PostMessageRequest } from '../../src/highlight/types';
 
 const CHAIN_ID = '11155111';
 const PRIVATE_KEY =
   '0x6e8d65443b59362a32762cf8409b5ba307f64ee9db4a3d0cff00fbdf49d0d2d6';
-const SENDER_ADDRESS = '0x1111111111111111111111111111111111111111';
 const ALIASES_ADDRESS = '0x0000000000000000000000000000000000000001';
 const FAKE_SIGNATURE =
   '0x9a40ce5d706efe66cdc1b9075b866ba25385bf083bbc19b7e1ce315ac2a3957f3a6e075762f6f4723006889ed341ce740e023959f6c600e30586f005f5afa64a1c';
@@ -22,13 +19,12 @@ const provider = new StaticJsonRpcProvider('https://rpc.snapshot.org/11155111');
 const adapter = new MemoryAdapter();
 const highlight = new Highlight({ adapter, agents: AGENTS_MAP });
 const wallet = new Wallet(PRIVATE_KEY, provider);
-const aliasesInterface = new Interface(AliasesAbi);
 
 function formatSalt(salt: bigint): string {
   return `0x${salt.toString(16).padStart(64, '0')}`;
 }
 
-async function getUnit(
+async function createRequest(
   chainId: string,
   salt: string,
   message: {
@@ -36,29 +32,40 @@ async function getUnit(
     alias: string;
   },
   opts: { useFakeSignature?: boolean } = {}
-): Promise<PendingUnit> {
-  const signature = opts.useFakeSignature
-    ? FAKE_SIGNATURE
-    : await signMessage(wallet, chainId, salt, SET_ALIAS_TYPES, message);
+): Promise<PostMessageRequest> {
+  const signer = await wallet.getAddress();
 
-  const data = aliasesInterface.encodeFunctionData('setAlias', [
+  const domain = {
+    ...BASE_DOMAIN,
     chainId,
     salt,
-    message.from,
-    message.alias,
-    signature
-  ]);
+    verifyingContract: ALIASES_ADDRESS
+  };
+
+  const signature = opts.useFakeSignature
+    ? FAKE_SIGNATURE
+    : await wallet._signTypedData(domain, SET_ALIAS_TYPES, message);
 
   return {
-    version: '0x1',
-    timestamp: 1744125549,
-    senderAddress: SENDER_ADDRESS,
-    toAddress: ALIASES_ADDRESS,
-    data
+    domain,
+    message,
+    entrypoint: 'setAlias',
+    signer,
+    signature
   };
 }
 
 describe('setAlias', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+
+    vi.setSystemTime(new Date('2025-01-01T00:00:00Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('should emit event', async () => {
     const salt = formatSalt(0n);
     const message = {
@@ -66,14 +73,17 @@ describe('setAlias', () => {
       alias: '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70'
     };
 
-    const unit = await getUnit(CHAIN_ID, salt, message);
-    const res = await highlight.postJoint({ unit });
+    const request = await createRequest(CHAIN_ID, salt, message);
+
+    const res = await highlight.postMessage(request);
 
     expect(res).toEqual({
       joint: {
         unit: {
-          ...unit,
-          id: 0
+          id: 0,
+          version: '0x1',
+          timestamp: 1735689600,
+          message: request
         }
       },
       events: [
@@ -83,7 +93,7 @@ describe('setAlias', () => {
           key: 'setAlias'
         }
       ],
-      steps: 5,
+      steps: 3,
       unit_id: 1
     });
   });
@@ -95,9 +105,9 @@ describe('setAlias', () => {
       alias: '0x537f1896541d28F4c70116EEa602b1B34Da95163'
     };
 
-    const unit = await getUnit(CHAIN_ID, salt, message);
+    const request = await createRequest(CHAIN_ID, salt, message);
 
-    await expect(highlight.postJoint({ unit })).rejects.toThrow(
+    await expect(highlight.postMessage(request)).rejects.toThrow(
       'Salt already used'
     );
   });
@@ -109,9 +119,9 @@ describe('setAlias', () => {
       alias: '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70'
     };
 
-    const unit = await getUnit(CHAIN_ID, salt, message);
+    const request = await createRequest(CHAIN_ID, salt, message);
 
-    await expect(highlight.postJoint({ unit })).rejects.toThrow(
+    await expect(highlight.postMessage(request)).rejects.toThrow(
       'Alias already exists'
     );
   });
@@ -123,11 +133,11 @@ describe('setAlias', () => {
       alias: '0x537f1896541d28F4c70116EEa602b1B34Da95163'
     };
 
-    const unit = await getUnit(CHAIN_ID, salt, message, {
+    const request = await createRequest(CHAIN_ID, salt, message, {
       useFakeSignature: true
     });
 
-    await expect(highlight.postJoint({ unit })).rejects.toThrow(
+    await expect(highlight.postMessage(request)).rejects.toThrow(
       'Invalid signature'
     );
   });
@@ -151,11 +161,25 @@ it('should retrieve unit receipt', async () => {
       }
     ],
     unit: {
-      data: '0xf96f5b8f0000000000000000000000000000000000000000000000000000000000aa36a7000000000000000000000000000000000000000000000000000000000000000000000000000000000000000015bb65c57fc440f3ac4fbeec68137b084416474b000000000000000000000000556b14cbda79a36dc33fcd461a04a5bcb5dc2a7000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000041a81f60aa0f5c5b38d0c0b8a25d7ab8dea2f1e166e27e423a41f00a5c0a9d5e4648ccd08332ebd1432d745d29f5fe5e8c087dcb3d804cb389fba4ed5ed19992101c00000000000000000000000000000000000000000000000000000000000000',
       id: 0,
-      senderAddress: '0x1111111111111111111111111111111111111111',
-      timestamp: 1744125549,
-      toAddress: '0x0000000000000000000000000000000000000001',
+      message: {
+        domain: {
+          chainId: '11155111',
+          name: 'highlight',
+          salt: '0x0000000000000000000000000000000000000000000000000000000000000000',
+          verifyingContract: '0x0000000000000000000000000000000000000001',
+          version: '0.1.0'
+        },
+        message: {
+          alias: '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70',
+          from: '0x15Bb65c57Fc440f3aC4FBeEC68137b084416474b'
+        },
+        entrypoint: 'setAlias',
+        signature:
+          '0x38487b45060523bf4d386faea6846071906ea300d30380a95c7bcfe4262c589212cc28dc6ee4d7ac20e6a96ae0e12abe518e55b0e17c588d83997d9764f4a19e1c',
+        signer: '0x15Bb65c57Fc440f3aC4FBeEC68137b084416474b'
+      },
+      timestamp: 1735689600,
       version: '0x1'
     }
   });

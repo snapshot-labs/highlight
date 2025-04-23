@@ -1,5 +1,6 @@
 import Agent from '../highlight/agent';
-import { verifySignature } from './utils/signatures';
+import Process from '../highlight/process';
+import { Domain } from '../highlight/types';
 
 export const SET_ALIAS_TYPES = {
   Alias: [
@@ -7,30 +8,20 @@ export const SET_ALIAS_TYPES = {
     { name: 'alias', type: 'address' }
   ]
 };
-export default class Aliases extends Agent {
-  async setAlias(
-    chainId: string,
-    salt: string,
-    from: string,
-    alias: string,
-    signature: string
-  ) {
-    const isSignatureValid = await verifySignature(
-      chainId,
-      salt,
-      from,
-      SET_ALIAS_TYPES,
-      {
-        from,
-        alias
-      },
-      signature,
-      { ecdsa: true, eip1271: true }
-    );
-    this.assert(isSignatureValid, 'Invalid signature');
 
-    const saltAlreadyUsed = await this.has(`salts:${salt}`);
-    this.assert(saltAlreadyUsed === false, 'Salt already used');
+export default class Aliases extends Agent {
+  constructor(id: string, process: Process) {
+    super(id, process);
+
+    this.addEntrypoint('setAlias', SET_ALIAS_TYPES);
+  }
+
+  async setAlias(
+    message: { from: string; alias: string },
+    meta: { domain: Domain }
+  ) {
+    const { salt } = meta.domain;
+    const { from, alias } = message;
 
     const aliasAlreadyExists = await this.has(`aliases:${from}-${alias}`);
     this.assert(aliasAlreadyExists === false, 'Alias already exists');
