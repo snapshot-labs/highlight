@@ -26,7 +26,6 @@ export default class Aliases extends Agent {
     const aliasAlreadyExists = await this.has(`aliases:${from}-${alias}`);
     this.assert(aliasAlreadyExists === false, 'Alias already exists');
 
-    this.write(`salts:${salt}`, true);
     this.write(`aliases:${from}-${alias}`, true);
     this.emit('setAlias', [from, alias, salt]);
   }
