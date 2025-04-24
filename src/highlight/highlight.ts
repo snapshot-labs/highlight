@@ -1,3 +1,4 @@
+import { EventEmitter } from 'stream';
 import AsyncLock from 'async-lock';
 import { Adapter } from './adapter/adapter';
 import Agent from './agent';
@@ -12,7 +13,7 @@ import {
 
 type AgentGetter = (process: Process) => Agent;
 
-export default class Highlight {
+export default class Highlight extends EventEmitter {
   private adapter: Adapter;
   private asyncLock = new AsyncLock();
   public agents: Record<string, AgentGetter | undefined>;
@@ -24,6 +25,7 @@ export default class Highlight {
     adapter: Adapter;
     agents: Record<string, AgentGetter>;
   }) {
+    super();
     this.adapter = adapter;
     this.agents = agents;
   }
@@ -68,6 +70,8 @@ export default class Highlight {
     multi.set(`salts:${request.domain.salt}`, true);
 
     await multi.exec();
+
+    this.emit('events', execution.events || []);
 
     return {
       joint: { unit },

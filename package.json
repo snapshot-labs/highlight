@@ -36,6 +36,7 @@
     "ts-node": "^10.8.1",
     "typescript": "^5.8.3",
     "vitest": "^3.1.1",
+    "ws": "^8.18.1",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -47,6 +48,7 @@
     "@types/mysql": "^2.15.21",
     "@types/node": "^22.14.0",
     "@types/pg": "^8.11.11",
+    "@types/ws": "^8.18.1",
     "eslint": "^8.57.0",
     "prettier": "^3.5.3"
   },
