@@ -2,6 +2,7 @@ import AsyncLock from 'async-lock';
 import { Adapter } from './adapter/adapter';
 import Agent from './agent';
 import Process from './process';
+import { BASE_DOMAIN, verifySignature } from './signatures';
 import {
   Event,
   GetUnitReceiptRequest,
@@ -27,13 +28,17 @@ export default class Highlight {
     this.agents = agents;
   }
 
-  postMessage(request: PostMessageRequest) {
+  async postMessage(request: PostMessageRequest) {
+    const process = new Process({ adapter: this.adapter });
+
+    await this.validateSignature(process, request);
+
     return this.asyncLock.acquire('postMessage', () =>
-      this._postMessage(request)
+      this._postMessage(process, request)
     );
   }
 
-  async _postMessage(request: PostMessageRequest) {
+  async _postMessage(process: Process, request: PostMessageRequest) {
     let steps = 0;
 
     const salt = await this.adapter.get(`salts:${request.domain.salt}`);
@@ -41,7 +46,6 @@ export default class Highlight {
       throw new Error('Salt already used');
     }
 
-    const process = new Process({ adapter: this.adapter });
     await this.invoke(process, request);
 
     const execution = await process.execute();
@@ -71,6 +75,38 @@ export default class Highlight {
       unit_id: id,
       steps
     };
+  }
+
+  async validateSignature(process: Process, request: PostMessageRequest) {
+    const { domain, signer, signature, message } = request;
+
+    const getAgent = this.agents[domain.verifyingContract.toLowerCase()];
+    const agent = getAgent(process);
+
+    const entrypointTypes = agent.entrypoints[request.entrypoint];
+
+    const verifyingDomain = {
+      ...BASE_DOMAIN,
+      chainId: domain.chainId,
+      salt: domain.salt.toString(),
+      verifyingContract: domain.verifyingContract
+    };
+
+    const isSignatureValid = await verifySignature(
+      verifyingDomain,
+      signer,
+      entrypointTypes,
+      message,
+      signature,
+      {
+        ecdsa: true,
+        eip1271: true
+      }
+    );
+
+    if (!isSignatureValid) {
+      throw new Error('Invalid signature');
+    }
   }
 
   async invoke(process: Process, request: PostMessageRequest) {

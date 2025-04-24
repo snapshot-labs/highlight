@@ -1,6 +1,5 @@
 import { TypedDataField } from '@ethersproject/abstract-signer';
 import Process from './process';
-import { BASE_DOMAIN, verifySignature } from './signatures';
 import { PostMessageRequest } from './types';
 
 export default class Agent {
@@ -18,34 +17,11 @@ export default class Agent {
   }
 
   async invoke(request: PostMessageRequest) {
-    const { entrypoint, domain, signer, signature, message } = request;
+    const { entrypoint, domain, message } = request;
 
     const entrypointTypes = this.entrypoints[entrypoint];
     if (!entrypointTypes) {
       throw new Error(`Entrypoint not found: ${entrypoint}`);
-    }
-
-    const verifyingDomain = {
-      ...BASE_DOMAIN,
-      chainId: domain.chainId,
-      salt: domain.salt.toString(),
-      verifyingContract: domain.verifyingContract
-    };
-
-    const isSignatureValid = await verifySignature(
-      verifyingDomain,
-      signer,
-      entrypointTypes,
-      message,
-      signature,
-      {
-        ecdsa: true,
-        eip1271: true
-      }
-    );
-
-    if (!isSignatureValid) {
-      throw new Error('Invalid signature');
     }
 
     const handler = (this as Record<string, any>)[entrypoint];
