@@ -1,24 +1,28 @@
 import { BaseProvider, BlockNotFoundError } from '@snapshot-labs/checkpoint';
 import { Writer } from './types';
+import Highlight from '../../highlight/highlight';
 import { Event, Unit } from '../../highlight/types';
-import { highlight } from '../../rpc';
 
 export let lastIndexedMci = 0;
 
 export class HighlightProvider extends BaseProvider {
   private readonly writers: Record<string, Writer>;
+  private highlight: Highlight;
 
   constructor({
     instance,
     log,
     abis,
-    writers
+    writers,
+    highlight
   }: ConstructorParameters<typeof BaseProvider>[0] & {
     writers: Record<string, Writer>;
+    highlight: Highlight;
   }) {
     super({ instance, log, abis });
 
     this.writers = writers;
+    this.highlight = highlight;
   }
 
   async getNetworkIdentifier() {
@@ -30,7 +34,7 @@ export class HighlightProvider extends BaseProvider {
   }
 
   async getLatestBlockNumber() {
-    return highlight.getMci();
+    return this.highlight.getMci();
   }
 
   formatAddresses(addresses: string[]): string[] {
@@ -40,7 +44,7 @@ export class HighlightProvider extends BaseProvider {
   async processBlock(blockNumber: number) {
     let receipt: { unit: Unit; events: Event[] };
     try {
-      receipt = await highlight.getUnitReceipt({
+      receipt = await this.highlight.getUnitReceipt({
         id: blockNumber
       });
     } catch {
