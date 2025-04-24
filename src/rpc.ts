@@ -1,7 +1,6 @@
 import express from 'express';
-import { lastIndexedMci } from './api/indexer/provider';
 import Highlight from './highlight/highlight';
-import { rpcError, rpcSuccess, sleep } from './utils';
+import { rpcError, rpcSuccess } from './utils';
 
 export default function createRpc(highlight: Highlight) {
   const router = express.Router();
@@ -34,10 +33,6 @@ export default function createRpc(highlight: Highlight) {
       case 'hl_postMessage': {
         try {
           const result = await highlight.postMessage(params);
-
-          while (result.unit_id > lastIndexedMci) {
-            await sleep(1e2);
-          }
 
           return rpcSuccess(res, result, id);
         } catch (e) {
