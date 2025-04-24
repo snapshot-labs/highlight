@@ -45,7 +45,9 @@ it('should create alias', async () => {
     alias: '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70'
   };
 
-  await expect(aliases.setAlias(message, { domain })).resolves.toBeUndefined();
+  await expect(
+    aliases.setAlias(message, { domain, signer: from })
+  ).resolves.toBeUndefined();
 
   expect(process.events).toEqual([
     {
@@ -54,6 +56,29 @@ it('should create alias', async () => {
       key: 'setAlias'
     }
   ]);
+});
+
+it('should throw if tries to creates alias for non-signer', async () => {
+  const process = new Process({ adapter });
+  const aliases = new Aliases('aliases', process);
+
+  const from = await wallet.getAddress();
+
+  const domain = {
+    ...BASE_DOMAIN,
+    chainId: CHAIN_ID,
+    verifyingContract: '0x0000000000000000000000000000000000000001',
+    salt: getSalt()
+  };
+
+  const message = {
+    from: '0x9905a3A1bAE3b10AD163Bb3735aE87cd70b84eC4',
+    alias: '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70'
+  };
+
+  await expect(
+    aliases.setAlias(message, { domain, signer: from })
+  ).rejects.toThrow('Invalid signer');
 });
 
 it('should throw if alias is reused', async () => {
@@ -74,15 +99,17 @@ it('should throw if alias is reused', async () => {
     alias: '0x9905a3A1bAE3b10AD163Bb3735aE87cd70b84eC4'
   };
 
-  await expect(aliases.setAlias(message, { domain })).resolves.toBeUndefined();
+  await expect(
+    aliases.setAlias(message, { domain, signer: from })
+  ).resolves.toBeUndefined();
 
   expect(process.events).toHaveLength(1);
 
   domain.salt = getSalt();
 
-  await expect(aliases.setAlias(message, { domain })).rejects.toThrow(
-    'Alias already exists'
-  );
+  await expect(
+    aliases.setAlias(message, { domain, signer: from })
+  ).rejects.toThrow('Alias already exists');
 
   expect(process.events).toHaveLength(1);
 });

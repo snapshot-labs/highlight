@@ -18,10 +18,12 @@ export default class Aliases extends Agent {
 
   async setAlias(
     message: { from: string; alias: string },
-    meta: { domain: Domain }
+    meta: { domain: Domain; signer: string }
   ) {
     const { salt } = meta.domain;
     const { from, alias } = message;
+
+    this.assert(from === meta.signer, 'Invalid signer');
 
     const aliasAlreadyExists = await this.has(`aliases:${from}-${alias}`);
     this.assert(aliasAlreadyExists === false, 'Alias already exists');

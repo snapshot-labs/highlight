@@ -17,7 +17,7 @@ export default class Agent {
   }
 
   async invoke(request: PostMessageRequest) {
-    const { entrypoint, domain, message } = request;
+    const { entrypoint, domain, message, signer } = request;
 
     const entrypointTypes = this.entrypoints[entrypoint];
     if (!entrypointTypes) {
@@ -26,7 +26,7 @@ export default class Agent {
 
     const handler = (this as Record<string, any>)[entrypoint];
     if (typeof handler === 'function') {
-      return handler.bind(this)(message, { domain });
+      return handler.bind(this)(message, { domain, signer });
     }
 
     throw new Error(`Handler not found: ${entrypoint}`);
