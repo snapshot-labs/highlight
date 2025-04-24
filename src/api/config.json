@@ -10,6 +10,40 @@
           "fn": "handleSetAlias"
         }
       ]
+    },
+    {
+      "contract": "townhall",
+      "start": 1,
+      "events": [
+        {
+          "name": "new_discussion",
+          "fn": "handleNewDiscussion"
+        },
+        {
+          "name": "close_discussion",
+          "fn": "handleCloseDiscussion"
+        },
+        {
+          "name": "new_statement",
+          "fn": "handleNewStatement"
+        },
+        {
+          "name": "pin_statement",
+          "fn": "handlePinStatement"
+        },
+        {
+          "name": "unpin_statement",
+          "fn": "handleUnpinStatement"
+        },
+        {
+          "name": "hide_statement",
+          "fn": "handleHideStatement"
+        },
+        {
+          "name": "new_vote",
+          "fn": "handleNewVote"
+        }
+      ]
     }
   ]
 }

@@ -46,7 +46,7 @@ router.post('/', async (req, res) => {
           await sleep(1e2);
         }
 
-        return rpcSuccess(res, result.unit_id, id);
+        return rpcSuccess(res, result, id);
       } catch (e) {
         console.log(e);
         return rpcError(res, 500, -32000, e, id);
