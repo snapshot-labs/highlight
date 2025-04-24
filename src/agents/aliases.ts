@@ -30,10 +30,10 @@ export default class Aliases extends Agent {
 
     this.assert(from === meta.signer, 'Invalid signer');
 
-    const aliasAlreadyExists = await this.has(`aliases:${from}-${alias}`);
+    const aliasAlreadyExists = await this.has(`aliases:${alias}`);
     this.assert(aliasAlreadyExists === false, 'Alias already exists');
 
-    this.write(`aliases:${from}-${alias}`, true);
+    this.write(`aliases:${alias}`, from);
     this.emit('setAlias', [from, alias, salt]);
   }
 }

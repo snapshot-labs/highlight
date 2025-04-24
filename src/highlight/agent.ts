@@ -42,12 +42,12 @@ export default class Agent {
     if (!condition) throw new Error(e);
   }
 
-  async has(key: string) {
-    return await this.process.has(this.id, key);
+  async has(key: string, id?: string) {
+    return await this.process.has(id || this.id, key);
   }
 
-  async get(key: string): Promise<any> {
-    return await this.process.get(this.id, key);
+  async get(key: string, id?: string): Promise<any> {
+    return await this.process.get(id || this.id, key);
   }
 
   write(key: string, value: any) {

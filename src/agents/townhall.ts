@@ -61,14 +61,19 @@ export default class Townhall extends Agent {
     this.addEntrypoint(VOTE_TYPES);
   }
 
+  getAuthor(signer: string) {
+    return this.get(`aliases:${signer}`, 'aliases') ?? signer;
+  }
+
   async discussion(
     { title, body }: { title: string; body: string },
     { signer }: { signer: string }
   ) {
     const id: number = (await this.get('discussions:id')) || 1;
 
+    const author = await this.getAuthor(signer);
     this.write('discussions:id', id + 1);
-    this.emit('new_discussion', [id, signer, title, body]);
+    this.emit('new_discussion', [id, author, title, body]);
   }
 
   async closeDiscussion({ discussion }: { discussion: number }) {
@@ -90,8 +95,10 @@ export default class Townhall extends Agent {
     const id: number =
       (await this.get(`discussion:${discussion}:statements:id`)) || 1;
 
+    const author = await this.getAuthor(signer);
+
     this.write(`discussion:${discussion}:statements:id`, id + 1);
-    this.emit('new_statement', [id, signer, discussion, body]);
+    this.emit('new_statement', [id, author, discussion, body]);
   }
 
   async hideStatement({
@@ -132,25 +139,25 @@ export default class Townhall extends Agent {
 
   async vote(
     {
-      voter,
       discussion,
       statement,
       choice
     }: {
-      voter: string;
       discussion: number;
       statement: number;
       choice: number;
     },
     { signer }: { signer: string }
   ) {
+    const author = await this.getAuthor(signer);
+
     const votes: number[] =
-      (await this.get(`discussion:${discussion}:voter:${voter}`)) || [];
+      (await this.get(`discussion:${discussion}:voter:${author}`)) || [];
 
     this.assert(!votes.includes(statement), 'already voted');
     votes.push(statement);
 
-    this.write(`discussion:${discussion}:voter:${voter}`, votes);
-    this.emit('new_vote', [signer, discussion, statement, choice]);
+    this.write(`discussion:${discussion}:voter:${author}`, votes);
+    this.emit('new_vote', [author, discussion, statement, choice]);
   }
 }
