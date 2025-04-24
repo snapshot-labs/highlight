@@ -5,7 +5,10 @@ import { PostMessageRequest } from './types';
 export default class Agent {
   public id: string;
   public process: Process;
-  public entrypoints: Record<string, Record<string, TypedDataField[]>> = {};
+  public entrypoints: Record<
+    string,
+    Record<string, TypedDataField[]> | undefined
+  > = {};
 
   constructor(id: string, process: Process) {
     this.id = id;

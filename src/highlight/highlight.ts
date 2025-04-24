@@ -84,6 +84,9 @@ export default class Highlight {
     const agent = getAgent(process);
 
     const entrypointTypes = agent.entrypoints[request.entrypoint];
+    if (!entrypointTypes) {
+      throw new Error(`Entrypoint not found: ${request.entrypoint}`);
+    }
 
     const verifyingDomain = {
       ...BASE_DOMAIN,
