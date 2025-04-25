@@ -9,42 +9,42 @@ export const DISCUSSION_TYPES = {
 };
 
 export const CLOSE_DISCUSSION_TYPES = {
-  CloseDiscussion: [{ name: 'discussion', type: 'int' }]
+  CloseDiscussion: [{ name: 'discussion', type: 'uint64' }]
 };
 
 export const STATEMENT_TYPES = {
   Statement: [
-    { name: 'discussion', type: 'int' },
+    { name: 'discussion', type: 'uint64' },
     { name: 'statement', type: 'string' }
   ]
 };
 
 export const HIDE_STATEMENT_TYPES = {
   HideStatement: [
-    { name: 'discussion', type: 'int' },
+    { name: 'discussion', type: 'uint64' },
     { name: 'statement', type: 'int' }
   ]
 };
 
 export const PIN_STATEMENT_TYPES = {
   PinStatement: [
-    { name: 'discussion', type: 'int' },
-    { name: 'statement', type: 'int' }
+    { name: 'discussion', type: 'uint64' },
+    { name: 'statement', type: 'uint64' }
   ]
 };
 
 export const UNPIN_STATEMENT_TYPES = {
   UnpinStatement: [
-    { name: 'discussion', type: 'int' },
-    { name: 'statement', type: 'int' }
+    { name: 'discussion', type: 'uint64' },
+    { name: 'statement', type: 'uint64' }
   ]
 };
 
 export const VOTE_TYPES = {
   Vote: [
-    { name: 'discussion', type: 'int' },
-    { name: 'statement', type: 'int' },
-    { name: 'choice', type: 'int' }
+    { name: 'discussion', type: 'uint64' },
+    { name: 'statement', type: 'uint64' },
+    { name: 'choice', type: 'uint64' }
   ]
 };
 
