@@ -22,7 +22,7 @@ describe('ECDSA', () => {
     };
 
     const signature =
-      '0xf6497f04d464f72e7e628019a60b73b333408f4661cc66c8e476eb4a9210dc966f38c8d20fea33574c8270b26254dceea9379b75f0dbd577efe6429b65278ac61c';
+      '0xb97e0ce664cf74cf1500992eb510a3541d772be062bbb2149e16e440e39cad6863682cda5742085b70b590b71f4f0574315ec850885f55a6a7d65e9d821161ad1c';
 
     const result = await verifyEcdsaSignature(
       createDomain(11155111, salt),
@@ -68,7 +68,7 @@ describe('eip1271', () => {
     };
 
     const signature =
-      '0x275fc929b1ccbc58fabdb159cc0fc85dca668fe0de82e91b91bbd2cd5f49324802d30cb4db5b90c07f3e57781d90947e0c8c500ee7f17674b1d4e0e7593ebf5c1b';
+      '0xb7f4220ee17579e1e11f81c88c9db1f0170fbb1fffec85146e3f9bc619a4524e7a540f7686965c844c9d5d7c809824b208a2e8ac36f6ff8c54a3f8426cdc98be1b';
 
     const result = await verifyEip1271Signature(
       createDomain(11155111, salt),

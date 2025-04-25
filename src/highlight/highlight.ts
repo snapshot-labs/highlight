@@ -83,9 +83,9 @@ export default class Highlight {
     const getAgent = this.agents[domain.verifyingContract.toLowerCase()];
     const agent = getAgent(process);
 
-    const entrypointTypes = agent.entrypoints[request.entrypoint];
+    const entrypointTypes = agent.entrypoints[request.primaryType];
     if (!entrypointTypes) {
-      throw new Error(`Entrypoint not found: ${request.entrypoint}`);
+      throw new Error(`Entrypoint not found: ${request.primaryType}`);
     }
 
     const verifyingDomain = {

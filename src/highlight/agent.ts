@@ -1,4 +1,6 @@
 import { TypedDataField } from '@ethersproject/abstract-signer';
+import { _TypedDataEncoder } from '@ethersproject/hash';
+import { camelCase } from 'change-case';
 import Process from './process';
 import { PostMessageRequest } from './types';
 
@@ -15,24 +17,25 @@ export default class Agent {
     this.process = process;
   }
 
-  addEntrypoint(name: string, types: Record<string, TypedDataField[]>) {
-    this.entrypoints[name] = types;
+  addEntrypoint(types: Record<string, TypedDataField[]>) {
+    const primaryType = _TypedDataEncoder.getPrimaryType(types);
+    this.entrypoints[primaryType] = types;
   }
 
   async invoke(request: PostMessageRequest) {
-    const { entrypoint, domain, message, signer } = request;
+    const { primaryType, domain, message, signer } = request;
 
-    const entrypointTypes = this.entrypoints[entrypoint];
+    const entrypointTypes = this.entrypoints[primaryType];
     if (!entrypointTypes) {
-      throw new Error(`Entrypoint not found: ${entrypoint}`);
+      throw new Error(`Entrypoint not found: ${primaryType}`);
     }
 
-    const handler = (this as Record<string, any>)[entrypoint];
+    const handler = (this as Record<string, any>)[camelCase(primaryType)];
     if (typeof handler === 'function') {
       return handler.bind(this)(message, { domain, signer });
     }
 
-    throw new Error(`Handler not found: ${entrypoint}`);
+    throw new Error(`Handler not found: ${primaryType}`);
   }
 
   assert(condition: unknown, e: string) {

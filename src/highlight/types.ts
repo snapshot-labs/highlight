@@ -7,7 +7,7 @@ export type Domain = Required<TypedDataDomain>;
 export type Message = {
   domain: Domain;
   message: Record<string, unknown>;
-  entrypoint: string;
+  primaryType: string;
   signer: string;
   signature: string;
 };

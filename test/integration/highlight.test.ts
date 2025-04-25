@@ -49,7 +49,7 @@ async function createRequest(
   return {
     domain,
     message,
-    entrypoint: 'setAlias',
+    primaryType: 'SetAlias',
     signer,
     signature
   };
@@ -174,9 +174,9 @@ it('should retrieve unit receipt', async () => {
           alias: '0x556B14CbdA79A36dC33FcD461a04A5BCb5dC2A70',
           from: '0x15Bb65c57Fc440f3aC4FBeEC68137b084416474b'
         },
-        entrypoint: 'setAlias',
+        primaryType: 'SetAlias',
         signature:
-          '0x38487b45060523bf4d386faea6846071906ea300d30380a95c7bcfe4262c589212cc28dc6ee4d7ac20e6a96ae0e12abe518e55b0e17c588d83997d9764f4a19e1c',
+          '0xd4f5345c22473b6f0040145d0ceb311ce4bc107872160b6d7287ccebcda4005d0e5186d2557ba698da5518ddc66d4ff89e202498b6e75300fd2cfdc3064373241b',
         signer: '0x15Bb65c57Fc440f3aC4FBeEC68137b084416474b'
       },
       timestamp: 1735689600,

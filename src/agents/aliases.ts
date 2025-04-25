@@ -3,7 +3,7 @@ import Process from '../highlight/process';
 import { Domain } from '../highlight/types';
 
 export const SET_ALIAS_TYPES = {
-  Alias: [
+  SetAlias: [
     { name: 'from', type: 'address' },
     { name: 'alias', type: 'address' }
   ]
@@ -13,7 +13,12 @@ export default class Aliases extends Agent {
   constructor(id: string, process: Process) {
     super(id, process);
 
-    this.addEntrypoint('setAlias', SET_ALIAS_TYPES);
+    this.addEntrypoint({
+      SetAlias: [
+        { name: 'from', type: 'address' },
+        { name: 'alias', type: 'address' }
+      ]
+    });
   }
 
   async setAlias(
