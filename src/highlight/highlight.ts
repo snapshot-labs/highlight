@@ -15,7 +15,7 @@ type AgentGetter = (process: Process) => Agent;
 export default class Highlight {
   private adapter: Adapter;
   private asyncLock = new AsyncLock();
-  public agents: Record<string, AgentGetter>;
+  public agents: Record<string, AgentGetter | undefined>;
 
   constructor({
     adapter,
@@ -81,6 +81,10 @@ export default class Highlight {
     const { domain, signer, signature, message } = request;
 
     const getAgent = this.agents[domain.verifyingContract.toLowerCase()];
+    if (!getAgent) {
+      throw new Error(`Agent not found: ${domain.verifyingContract}`);
+    }
+
     const agent = getAgent(process);
 
     const entrypointTypes = agent.entrypoints[request.primaryType];
@@ -113,8 +117,13 @@ export default class Highlight {
   }
 
   async invoke(process: Process, request: PostMessageRequest) {
-    const getAgent =
-      this.agents[request.domain.verifyingContract.toLowerCase()];
+    const agentAddress = request.domain.verifyingContract.toLowerCase();
+
+    const getAgent = this.agents[agentAddress];
+    if (!getAgent) {
+      throw new Error(`Agent not found: ${agentAddress}`);
+    }
+
     const agent = getAgent(process);
 
     return agent.invoke(request);
