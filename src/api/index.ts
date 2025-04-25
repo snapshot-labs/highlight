@@ -5,6 +5,7 @@ import config from './config.json';
 import { HighlightIndexer } from './indexer';
 import overrides from './overrides.json';
 import { createWriters } from './writers';
+import Highlight from '../highlight/highlight';
 
 const dir = __dirname.endsWith('dist/src/api') ? '../' : '';
 const schemaFile = path.join(__dirname, `${dir}../../src/api/schema.gql`);
@@ -14,22 +15,25 @@ if (process.env.CA_CERT) {
   process.env.CA_CERT = process.env.CA_CERT.replace(/\\n/g, '\n');
 }
 
-export const checkpoint = new Checkpoint(schema, {
-  logLevel: LogLevel.Fatal,
-  prettifyLogs: process.env.NODE_ENV !== 'production',
-  dbConnection: process.env.API_DATABASE_URL,
-  overridesConfig: overrides
-});
+export default async function createCheckpoint(highlight: Highlight) {
+  const checkpoint = new Checkpoint(schema, {
+    logLevel: LogLevel.Fatal,
+    prettifyLogs: process.env.NODE_ENV !== 'production',
+    dbConnection: process.env.API_DATABASE_URL,
+    overridesConfig: overrides
+  });
 
-const highlightIndexer = new HighlightIndexer(createWriters('highlight'));
-checkpoint.addIndexer('highlight', config, highlightIndexer);
+  const highlightIndexer = new HighlightIndexer(
+    highlight,
+    createWriters('highlight')
+  );
+  checkpoint.addIndexer('highlight', config, highlightIndexer);
 
-async function start() {
   await checkpoint.reset();
   await checkpoint.resetMetadata();
   console.log('Checkpoint ready');
 
-  await checkpoint.start();
-}
+  checkpoint.start();
 
-start();
+  return checkpoint;
+}
