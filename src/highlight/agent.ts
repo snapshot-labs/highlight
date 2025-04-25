@@ -1,39 +1,41 @@
-import { Interface } from '@ethersproject/abi';
+import { TypedDataField } from '@ethersproject/abstract-signer';
+import { _TypedDataEncoder } from '@ethersproject/hash';
+import { camelCase } from 'change-case';
 import Process from './process';
+import { PostMessageRequest } from './types';
 
 export default class Agent {
   public id: string;
   public process: Process;
-  public iface: Interface;
+  public entrypoints: Record<
+    string,
+    Record<string, TypedDataField[]> | undefined
+  > = {};
 
-  constructor(
-    id: string,
-    process: Process,
-    fragments: ConstructorParameters<typeof Interface>[0]
-  ) {
+  constructor(id: string, process: Process) {
     this.id = id;
     this.process = process;
-    this.iface = new Interface(fragments);
   }
 
-  invoke(data: string) {
-    const parsed = this.iface.parseTransaction({ data });
+  addEntrypoint(types: Record<string, TypedDataField[]>) {
+    const primaryType = _TypedDataEncoder.getPrimaryType(types);
+    this.entrypoints[primaryType] = types;
+  }
 
-    const handlerName = parsed.name;
-    const parsedArgs = parsed.args.map(arg => {
-      if (arg._isBigNumber) {
-        return arg.toBigInt();
-      }
+  async invoke(request: PostMessageRequest) {
+    const { primaryType, domain, message, signer } = request;
 
-      return arg;
-    });
-
-    const handler = (this as Record<string, any>)[handlerName];
-    if (typeof handler === 'function') {
-      return handler.bind(this)(...parsedArgs);
+    const entrypointTypes = this.entrypoints[primaryType];
+    if (!entrypointTypes) {
+      throw new Error(`Entrypoint not found: ${primaryType}`);
     }
 
-    throw new Error(`Handler not found: ${handlerName}`);
+    const handler = (this as Record<string, any>)[camelCase(primaryType)];
+    if (typeof handler === 'function') {
+      return handler.bind(this)(message, { domain, signer });
+    }
+
+    throw new Error(`Handler not found: ${primaryType}`);
   }
 
   assert(condition: unknown, e: string) {

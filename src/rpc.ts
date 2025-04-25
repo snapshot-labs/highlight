@@ -3,7 +3,6 @@ import { AGENTS_MAP } from './agents';
 import { lastIndexedMci } from './api/indexer/provider';
 import { RedisAdapter } from './highlight/adapter/redis';
 import Highlight from './highlight/highlight';
-import { PendingUnit } from './highlight/types';
 import { rpcError, rpcSuccess, sleep } from './utils';
 
 const DATABASE_URL = process.env.DATABASE_URL || '';
@@ -39,19 +38,9 @@ router.post('/', async (req, res) => {
       }
     }
 
-    case 'hl_postJoint': {
-      const { from, to, data } = params;
-
+    case 'hl_postMessage': {
       try {
-        const unit: PendingUnit = {
-          version: '0x1',
-          timestamp: ~~(Date.now() / 1e3),
-          senderAddress: from,
-          toAddress: to,
-          data
-        };
-
-        const result = await highlight.postJoint({ unit });
+        const result = await highlight.postMessage(params);
 
         while (result.unit_id > lastIndexedMci) {
           await sleep(1e2);

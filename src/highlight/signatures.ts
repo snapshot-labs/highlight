@@ -2,14 +2,14 @@ import {
   TypedDataDomain,
   TypedDataField
 } from '@ethersproject/abstract-signer';
+import { BigNumberish } from '@ethersproject/bignumber';
 import { Contract, ContractInterface } from '@ethersproject/contracts';
 import { _TypedDataEncoder } from '@ethersproject/hash';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
-import { verifyTypedData, Wallet } from '@ethersproject/wallet';
+import { verifyTypedData } from '@ethersproject/wallet';
 
 type SignatureVerifier = (
-  chainId: number | string,
-  salt: string,
+  domain: Required<TypedDataDomain>,
   address: string,
   types: Record<string, TypedDataField[]>,
   message: Record<string, any>,
@@ -32,7 +32,7 @@ const ERC1271_ABI_OLD = [
 const ERC1271_MAGIC_VALUE = '0x1626ba7e';
 const ERC1271_MAGIC_VALUE_OLD = '0x20c13b0b';
 
-const BASE_DOMAIN: TypedDataDomain = {
+export const BASE_DOMAIN = {
   name: 'highlight',
   version: '0.1.0'
 };
@@ -41,70 +41,31 @@ function isEqual(a: string, b: string): boolean {
   return a.toLowerCase() === b.toLowerCase();
 }
 
-function getHash(
-  chainId: Required<TypedDataDomain['chainId']>,
-  salt: string,
-  types: Record<string, TypedDataField[]>,
-  message: Record<string, any>
-): string {
-  const domain = {
-    ...BASE_DOMAIN,
-    chainId,
-    salt
-  };
-
-  return _TypedDataEncoder.hash(domain, types, message);
-}
-
-export async function signMessage(
-  wallet: Wallet,
-  chainId: Required<TypedDataDomain['chainId']>,
-  salt: string,
-  types: Record<string, TypedDataField[]>,
-  message: Record<string, any>
-): Promise<string> {
-  const domain = {
-    ...BASE_DOMAIN,
-    chainId,
-    salt
-  };
-
-  return wallet._signTypedData(domain, types, message);
-}
-
 export const verifyEcdsaSignature: SignatureVerifier = async (
-  chainId,
-  salt,
+  domain,
   address,
   types,
   message,
   signature
 ) => {
-  const domain = {
-    ...BASE_DOMAIN,
-    chainId,
-    salt
-  };
-
   const recoveredAddress = verifyTypedData(domain, types, message, signature);
 
   return isEqual(recoveredAddress, address);
 };
 
 export const verifyEip1271Signature: SignatureVerifier = async (
-  chainId,
-  salt,
+  domain,
   address,
   types,
   message,
   signature
 ) => {
-  const hash = getHash(chainId, salt, types, message);
+  const hash = _TypedDataEncoder.hash(domain, types, message);
 
   const params = [address, signature, hash] as const;
 
   const valid = await verifyEip1271SignatureWithAbi(
-    chainId,
+    domain.chainId,
     ERC1271_ABI,
     ERC1271_MAGIC_VALUE,
     ...params
@@ -112,7 +73,7 @@ export const verifyEip1271Signature: SignatureVerifier = async (
   if (valid) return true;
 
   const validOld = await verifyEip1271SignatureWithAbi(
-    chainId,
+    domain.chainId,
     ERC1271_ABI_OLD,
     ERC1271_MAGIC_VALUE_OLD,
     ...params
@@ -122,7 +83,7 @@ export const verifyEip1271Signature: SignatureVerifier = async (
 };
 
 async function verifyEip1271SignatureWithAbi(
-  chainId: number | string,
+  chainId: BigNumberish,
   abi: ContractInterface,
   magicValue: string,
   address: string,
@@ -133,7 +94,7 @@ async function verifyEip1271SignatureWithAbi(
   try {
     const provider = new StaticJsonRpcProvider(
       `https://rpc.snapshot.org/${chainId}`,
-      chainId
+      Number(chainId)
     );
 
     const contract = new Contract(address, abi, provider);
@@ -146,15 +107,14 @@ async function verifyEip1271SignatureWithAbi(
 }
 
 export async function verifySignature(
-  chainId: number | string,
-  salt: string,
+  domain: Required<TypedDataDomain>,
   address: string,
   types: Record<string, TypedDataField[]>,
   message: Record<string, any>,
   signature: string,
   options: VerifyOptions
 ) {
-  const params = [chainId, salt, address, types, message, signature] as const;
+  const params = [domain, address, types, message, signature] as const;
 
   if (options.ecdsa) {
     const valid = await verifyEcdsaSignature(...params);

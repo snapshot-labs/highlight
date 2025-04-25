@@ -2,14 +2,20 @@ import AsyncLock from 'async-lock';
 import { Adapter } from './adapter/adapter';
 import Agent from './agent';
 import Process from './process';
-import { Event, GetUnitReceiptRequest, PostJointRequest, Unit } from './types';
+import { BASE_DOMAIN, verifySignature } from './signatures';
+import {
+  Event,
+  GetUnitReceiptRequest,
+  PostMessageRequest,
+  Unit
+} from './types';
 
 type AgentGetter = (process: Process) => Agent;
 
 export default class Highlight {
   private adapter: Adapter;
   private asyncLock = new AsyncLock();
-  public agents: Record<string, AgentGetter>;
+  public agents: Record<string, AgentGetter | undefined>;
 
   constructor({
     adapter,
@@ -22,15 +28,25 @@ export default class Highlight {
     this.agents = agents;
   }
 
-  postJoint(params: PostJointRequest) {
-    return this.asyncLock.acquire('postJoint', () => this._postJoint(params));
+  async postMessage(request: PostMessageRequest) {
+    const process = new Process({ adapter: this.adapter });
+
+    await this.validateSignature(process, request);
+
+    return this.asyncLock.acquire('postMessage', () =>
+      this._postMessage(process, request)
+    );
   }
 
-  async _postJoint(params: PostJointRequest) {
+  async _postMessage(process: Process, request: PostMessageRequest) {
     let steps = 0;
 
-    const process = new Process({ adapter: this.adapter });
-    await this.invoke(process, params.unit.toAddress, params.unit.data);
+    const salt = await this.adapter.get(`salts:${request.domain.salt}`);
+    if (salt) {
+      throw new Error('Salt already used');
+    }
+
+    await this.invoke(process, request);
 
     const execution = await process.execute();
     steps = process.steps;
@@ -39,7 +55,9 @@ export default class Highlight {
 
     const unit: Unit = {
       id,
-      ...params.unit
+      version: '0x1',
+      timestamp: ~~(Date.now() / 1e3),
+      message: request
     };
 
     id++;
@@ -47,6 +65,7 @@ export default class Highlight {
     multi.set(`unit:${id}`, unit);
     multi.set(`unit_events:${id}`, execution.events);
     multi.set('units:id', id);
+    multi.set(`salts:${request.domain.salt}`, true);
 
     await multi.exec();
 
@@ -58,11 +77,56 @@ export default class Highlight {
     };
   }
 
-  async invoke(process: Process, to: string, data: string) {
-    const getAgent = this.agents[to.toLowerCase()];
+  async validateSignature(process: Process, request: PostMessageRequest) {
+    const { domain, signer, signature, message } = request;
+
+    const getAgent = this.agents[domain.verifyingContract.toLowerCase()];
+    if (!getAgent) {
+      throw new Error(`Agent not found: ${domain.verifyingContract}`);
+    }
+
     const agent = getAgent(process);
 
-    return agent.invoke(data);
+    const entrypointTypes = agent.entrypoints[request.primaryType];
+    if (!entrypointTypes) {
+      throw new Error(`Entrypoint not found: ${request.primaryType}`);
+    }
+
+    const verifyingDomain = {
+      ...BASE_DOMAIN,
+      chainId: domain.chainId,
+      salt: domain.salt.toString(),
+      verifyingContract: domain.verifyingContract
+    };
+
+    const isSignatureValid = await verifySignature(
+      verifyingDomain,
+      signer,
+      entrypointTypes,
+      message,
+      signature,
+      {
+        ecdsa: true,
+        eip1271: true
+      }
+    );
+
+    if (!isSignatureValid) {
+      throw new Error('Invalid signature');
+    }
+  }
+
+  async invoke(process: Process, request: PostMessageRequest) {
+    const agentAddress = request.domain.verifyingContract.toLowerCase();
+
+    const getAgent = this.agents[agentAddress];
+    if (!getAgent) {
+      throw new Error(`Agent not found: ${agentAddress}`);
+    }
+
+    const agent = getAgent(process);
+
+    return agent.invoke(request);
   }
 
   async getUnitReceipt(params: GetUnitReceiptRequest) {

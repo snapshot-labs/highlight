@@ -1,17 +1,23 @@
-export interface PostJointRequest {
-  unit: PendingUnit;
-}
+import { TypedDataDomain } from '@ethersproject/abstract-signer';
+
+export type PostMessageRequest = Message;
+
+export type Domain = Required<TypedDataDomain>;
+
+export type Message = {
+  domain: Domain;
+  message: Record<string, unknown>;
+  primaryType: string;
+  signer: string;
+  signature: string;
+};
 
 export type Unit = {
   id: number;
   version: string;
   timestamp: number;
-  senderAddress: string;
-  toAddress: string;
-  data: string;
+  message: Message;
 };
-
-export type PendingUnit = Omit<Unit, 'id'>;
 
 export interface GetUnitReceiptRequest {
   id: number;
